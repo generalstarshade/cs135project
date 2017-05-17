@@ -7,7 +7,7 @@ import javax.sql.DataSource;
 
 public class ConnectionManager {
 	private static final String INIT_LOOOKUP = "java:comp/env";
-	private static final String DB_LOOKUP = "jdbc/shoppingAppDB";
+	private static final String DB_LOOKUP = "jdbc:postgresql://localhost:5432/CSE135Solution";
 	public static Connection con = null;
 	
 	public ConnectionManager(){	
