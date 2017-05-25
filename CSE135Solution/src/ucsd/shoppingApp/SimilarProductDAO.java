@@ -19,7 +19,7 @@ public class SimilarProductDAO {
 		public SimilarProductDAO(Connection con) {
 			this.con = con;
 			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-			InputStream is = classLoader.getResourceAsStream("SimilarProductsSQLQuery");
+			InputStream is = classLoader.getResourceAsStream("SimilarProductsSQLQuery.sql");
 			java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
 		    this.GET_SIMILAR_PRODUCTS = s.hasNext() ? s.next() : "";
 
