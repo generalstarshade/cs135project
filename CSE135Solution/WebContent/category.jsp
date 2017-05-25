@@ -23,20 +23,20 @@
 				<td></td>
 				<td>
 					<h3>Hello <%= session.getAttribute("personName") %></h3>
-					<h3>Categories List</h3>
+					<h3>Categories List</h3> 
 					<% Connection con = ConnectionManager.getConnection(); 
 						CategoryDAO categoryDao = new CategoryDAO(con);
 						String role = session.getAttribute("roleName").toString();
 						
 						if("owner".equalsIgnoreCase(role)) { %>
-						<% if(request.getAttribute("error") != null && (boolean)request.getAttribute("error")) { %>
+						<% if(request.getAttribute("error") != null && (Boolean)request.getAttribute("error")) { %>
 						<h3 style="color:red;">Data Modification Failure</h3>
 						<h4 style="color:red;"><%= request.getAttribute("message").toString() %></h4>
 						<% request.setAttribute("message", null);
 							request.setAttribute("error", false);
 						} 
 						
-						if(request.getAttribute("message")!= null && !(boolean)request.getAttribute("error")) { %>
+						if(request.getAttribute("message")!= null && !(Boolean)request.getAttribute("error")) { %>
 						<h4 style="color:green;"><%= request.getAttribute("message").toString() %></h4>
 						<% 
 						request.setAttribute("message", null);

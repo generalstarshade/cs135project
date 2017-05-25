@@ -78,6 +78,21 @@ public class ProductModel {
 		this.price = price;
 	}
 
+	public ProductModel(ProductModel product) {
+		this.category_id = product.getCategory_id();
+		this.category_name = product.getCategory_name();
+		this.created_by = product.getCreated_by();
+		this.created_date = product.getCreated_date();
+		this.product_id = product.getProduct_id();
+		this.product_name = product.getProduct_name();
+		this.sku_id = product.getSku_id();
+		this.price = product.getPrice();
+	}
+	
+	public ProductModel(String prod_name) {
+		this.product_name = prod_name;
+	}
+	
 	public ProductModel(ResultSet rs) throws SQLException {
 		try {
 			this.category_id = rs.getInt("category_id");

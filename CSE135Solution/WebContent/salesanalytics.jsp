@@ -1,3 +1,7 @@
+<%@page import="java.sql.Connection"%>
+<%@page import="ucsd.shoppingApp.ConnectionManager"%>
+<%@page import="ucsd.shoppingApp.CategoryDAO"%>
+<%@page import="ucsd.shoppingApp.AnalyticsDAO"%>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
 	pageEncoding="ISO-8859-1"%>
 <%@page import="ucsd.shoppingApp.PersonDAO"%>
@@ -13,14 +17,51 @@
 	</br>
 	
 	<!-- -------------------------------Dashboard Code----------------------------- -->
-	
+	<%
+	if(session.getAttribute("roleName") != null) { %>
+
+		<div name="headerdiv" align="center">
+		<h3>Hello <%= session.getAttribute("personName") %></h3>
+		</br>
+		<div name="tableDiv" align="left" style="padding-left:50px">
+		<table cellspacing="5">
+			<tr>
+				<td valign="top"><jsp:include page="./menu.jsp"></jsp:include></td>
+				<td></td>
+				<td>
+					
+					<% Connection con = ConnectionManager.getConnection(); 
+						CategoryDAO categoryDao = new CategoryDAO(con);
+						AnalyticsDAO analyticsDao = new AnalyticsDAO(con);
+						String role = session.getAttribute("roleName").toString();
+						
+						if("owner".equalsIgnoreCase(role)) { %>
+						<% if(request.getAttribute("error") != null && (Boolean)request.getAttribute("error")) { %>
+						<h3 style="color:red;">Data Modification Failure</h3>
+						<h4 style="color:red;"><%= request.getAttribute("message").toString() %></h4>
+						<% request.setAttribute("message", null);
+							request.setAttribute("error", false);
+							} 
+						
+						if(request.getAttribute("message")!= null && !(Boolean)request.getAttribute("error")) { %>
+						<h4 style="color:green;"><%= request.getAttribute("message").toString() %></h4>
+						<% 
+						request.setAttribute("message", null);
+						request.setAttribute("error", false);
+							}
+						
+						ArrayList<CategoryModel> categories = (ArrayList<CategoryModel>)categoryDao.getCategories();
+						//ArrayList<>
+						%>
+				</td></tr></table></div></br>
+	</div>
 	<div id="dashboard" class="container" align="center"
 			style="border-style:solid; border-color:#DCDCDC;
 			border-radius:15px; padding-bottom:20px;">
 	
 		<h3 style="color:#000000;">Dashboard</h3> </br>
 		
-		<form method="get" action="salesanalytics.jsp">
+		<form method="get" action="AnalyticsController">
 		
 		<div id="dropRows" class="row">	
 		
@@ -40,8 +81,11 @@
 					
 			<div class="col-xs-4" class="form-group">
 			<select name="dd_cat" class="form-control">
-			
+			<option value="-1">All categories</option>
 			<!-- Insert GET categories DAO -->
+			<% for (CategoryModel category : categories) {
+			%> <option value=<%=category.getId()%>><%=category.getCategoryName()%></option>
+			<% } %>
 			</select>
 			</div>
 			
@@ -53,7 +97,9 @@
 		</div>
 		</form>
 	</div>
-	
+	<%} else { %>
+	<h3>This page is available to owners only</h3>
+	<% } } %>
 	<!-- ------------------------------Matrix Code--------------------------------- -->
 	
 	<div>

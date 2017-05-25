@@ -16,6 +16,7 @@ public class PersonDAO {
 	private static final String INSERT_PERSON_SQL = "INSERT INTO PERSON(person_name, age, role_id, state_id) "
 			+ " VALUES(?, ?, ?, ?) ";
 	private static final String GET_PERSON_ROLE = "SELECT role_name FROM ROLE R, PERSON P WHERE P.person_name = ? AND P.role_id = R.id";
+	
 	private Connection con = null;
 	
 	public PersonDAO(Connection con) {
