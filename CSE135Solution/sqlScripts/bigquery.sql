@@ -7,10 +7,10 @@ WITH proSales AS (
 	AND s.is_purchased = true AND s.person_id = p.id
 	GROUP BY p.id, proid
 	)
-    
-SELECT pp.product_name, per.person_name, proSales.sales
-FROM product pp
+
+SELECT per.id AS cid, per.person_name, pp.id as pid, pp.product_name, coalesce(proSales.sales, 0) AS total
+FROM product pp cross join person per
 LEFT OUTER JOIN proSales
-ON pp.id = proSales.proid, person per
-WHERE per.id = proSales.pid
-ORDER BY per.person_name ASC;
+ON (pp.id = proSales.proid AND per.id = proSales.pid) 
+WHERE per.role_id = 2
+ORDER BY per.person_name, pp.product_name
