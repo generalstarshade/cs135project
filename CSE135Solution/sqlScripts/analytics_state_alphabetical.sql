@@ -2,7 +2,7 @@ WITH statesales AS (WITH proSales AS (WITH pro AS (
    SELECT * 
    FROM product
    ORDER BY product_name
-   OFFSET 10 * ? ROWS
+   OFFSET 10 * ?
    FETCH NEXT 10 ROWS ONLY
 )
 	SELECT p.id AS pid, p.person_name AS person_name, pro.id AS proid, pro.product_name AS product_name, 
@@ -21,7 +21,7 @@ st.state_name
 FROM (SELECT * 
    FROM product
    ORDER BY product_name
-   OFFSET 10 * ? ROWS
+   OFFSET 10 * ?
    FETCH NEXT 10 ROWS ONLY) pp cross join person per
 LEFT OUTER JOIN proSales
 ON (pp.id = proSales.proid AND per.id = proSales.pid), state st 
