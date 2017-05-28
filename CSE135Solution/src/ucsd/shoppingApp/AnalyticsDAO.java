@@ -8,23 +8,39 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import ucsd.shoppingApp.models.CategoryModel;
+import ucsd.shoppingApp.models.AnalyticsModel;
 
 public class AnalyticsDAO {
 
-	
+		private static String ANALYTICS_PERSON_ALPHABETICAL_FINAL = 
+				"SELECT per.id AS cid, per.person_name, pp.id as pid, pp.product_name, coalesce(proSales.sales, 0) AS total " +
+				"FROM pro pp cross join person per " +
+				"LEFT OUTER JOIN proSales" +
+				"ON (pp.id = proSales.proid AND per.id = proSales.pid) " +
+				"WHERE per.role_id = 2 " +
+				"ORDER BY per.person_name, pp.product_name " +
+				"OFFSET 200 * ? " +
+				"FETCH NEXT 200 ROWS ONLY";
 		
-	//private static String GET_CATEGORIES_SQL = "SELECT id, category_name, description FROM category ORDER BY modified_date DESC";
-		private static String GET_CATEGORIES_SQL = "SELECT c.id, c.category_name, c.description, count(p.id) count FROM category c LEFT JOIN product p ON p.category_id = c.id "
-				+ " GROUP BY c.id, c.category_name, c.description "
-				+ " ORDER BY c.modified_date DESC";
-		private static String ADD_CATEGORIES_SQL = "INSERT INTO category(category_name, description, created_by, modified_by) "
-				+ " VALUES(?, ?, ?, ?)";
-		private static String UPDATE_CATEGORIES_SQL = "UPDATE category SET category_name = ?, description = ?, modified_by = ? WHERE id = ?";
-		private static String DELETE_CATEGORIES_SQL = "DELETE FROM category WHERE id = ?";
-		private static String PRODUCT_EXISTS_SQL = "SELECT id FROM product WHERE category_id = ?";
-
-		private static String GET_CATEGORIES_BY_NAME_SQL = "SELECT id,category_name, description FROM category WHERE category_name= ? ";
+		private static String ANALYTICS_STATE_ALPHABETICAL_FINAL =
+				"SELECT state_name, product_name, SUM(total) " +
+				"FROM statesales " +
+				"GROUP BY state_name, product_name " +
+				"ORDER BY state_name, product_name";
+		
+		private static String ANALYTICS_PERSON_TOPK_FINAL =
+				"SELECT o.cid, allSales.person_name, allSales.pid, allSales.product_name, allSales.total, allSales.ptotal, o.sumTotal AS ctotal " +
+				"FROM ordered o " +
+				"LEFT OUTER JOIN allSales " +
+				"ON (o.cid = allSales.cid) " +
+				"ORDER BY ctotal DESC, ptotal DESC";
+		
+		private static String ANALYTICS_STATE_TOPK_FINAL =
+				"-- SELECT o.state_id, allSales.state_name, allSales.pid, allSales.product_name, allSales.salesstates, allSales.ptotal, o.sTotal AS stotal " +
+				"-- FROM ordered o " +
+				"-- LEFT OUTER JOIN allSales " +
+				"-- ON (o.state_id = allSales.state_id) " +
+				"-- ORDER BY stotal DESC, ptotal DESC";
 
 		private Connection con;
 
@@ -32,191 +48,19 @@ public class AnalyticsDAO {
 			this.con = con;
 		}
 
-		public List<CategoryModel> getCategories() {
-			List<CategoryModel> categories = new ArrayList<CategoryModel>();
+		public List<AnalyticsModel> getAnalytics() {
+			List<AnalyticsModel> analytics = new ArrayList<AnalyticsModel>();
 			Statement stmt = null;
 			ResultSet rs = null;
-			try {
+			return analytics;
+			/*try {
 				stmt = con.createStatement();
-				rs = stmt.executeQuery(GET_CATEGORIES_SQL);
-				while (rs.next()) {
-					CategoryModel c = new CategoryModel(rs.getInt("id"), rs.getString("category_name"),
-							rs.getString("description"), rs.getInt("count"));
-					categories.add(c);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
+				// rs = 
+			} catch {
+				
 			} finally {
-				try {
-					if (rs != null) {
-						rs.close();
-					}
-					if (stmt != null) {
-						stmt.close();
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			return categories;
+				
+			}*/
 		}
-
-		public CategoryModel getCategoriesbyName(String category_name) {
-			CategoryModel category = null;
-			PreparedStatement ptst = null;
-			Statement stmt = null;
-			ResultSet rs = null;
-			try {
-				ptst = con.prepareStatement(GET_CATEGORIES_BY_NAME_SQL);
-				ptst.setString(1, category_name);
-				rs = ptst.executeQuery();
-				while (rs.next()) {
-					category = new CategoryModel(rs.getInt("id"), rs.getString("category_name"),
-							rs.getString("description"));
-					break; // should happen only once anyway.
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (rs != null) {
-						rs.close();
-					}
-					if (ptst != null) {
-						ptst.close();
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			return category;
-		}
-
-		public int addCategory(CategoryModel category, String user) throws SQLException {
-			int categoryId = -1;
-			PreparedStatement ptst = null;
-			ResultSet rs = null;
-			try {
-				ptst = con.prepareStatement(ADD_CATEGORIES_SQL, Statement.RETURN_GENERATED_KEYS);
-				ptst.setString(1, category.getCategoryName());
-				ptst.setString(2, category.getDescription());
-				ptst.setString(3, user);
-				ptst.setString(4, user);
-				int inserted = ptst.executeUpdate();
-				if (inserted != 0) {
-					rs = ptst.getGeneratedKeys();
-					while (rs.next()) {
-						categoryId = rs.getInt(1);
-					}
-				}
-				con.commit();
-			} catch (SQLException e) {
-				con.rollback();
-				throw e;
-			} catch (Exception e) {
-				con.rollback();
-				throw e;
-			} finally {
-				if (rs != null) {
-					rs.close();
-				}
-				if (ptst != null) {
-					try {
-						ptst.close();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			return categoryId;
-		}
-
-		public void updateCategory(CategoryModel category, String user) throws SQLException {
-			PreparedStatement ptst = null;
-			try {
-				ptst = con.prepareStatement(UPDATE_CATEGORIES_SQL);
-				ptst.setString(1, category.getCategoryName());
-				ptst.setString(2, category.getDescription());
-				ptst.setString(3, user);
-				ptst.setInt(4, category.getId());
-				ptst.executeUpdate();
-				con.commit();
-			} catch (SQLException e) {
-				con.rollback();
-				throw e;
-			} catch (Exception e) {
-				con.rollback();
-				throw e;
-			} finally {
-				if (ptst != null) {
-					try {
-						ptst.close();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-
-		public void deleteCategory(int categoryId) throws SQLException {
-			PreparedStatement ptst = null;
-			try {
-				if (productExists(categoryId)) {
-
-					SQLException e = new SQLException("Delete unsuccessful. There are products associated to the category");
-					throw e;
-				} else {
-					ptst = con.prepareStatement(DELETE_CATEGORIES_SQL);
-					ptst.setInt(1, categoryId);
-					ptst.executeUpdate();
-					con.commit();
-				}
-			} catch (SQLException e) {
-				con.rollback();
-				throw e;
-			} catch (Exception e) {
-				con.rollback();
-				throw e;
-			} finally {
-				if (ptst != null) {
-					try {
-						ptst.close();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-
-		public boolean productExists(int categoryId) throws SQLException {
-			PreparedStatement ptst = null;
-			boolean productExists = false;
-			ResultSet rs = null;
-			try {
-				ptst = con.prepareStatement(PRODUCT_EXISTS_SQL);
-				ptst.setInt(1, categoryId);
-				rs = ptst.executeQuery();
-				if (rs.next()) {
-					productExists = true;
-				} else {
-					productExists = false;
-				}
-			} catch (SQLException e) {
-				throw e;
-			} catch (Exception e) {
-				throw e;
-			} finally {
-				if (rs != null) {
-					rs.close();
-				}
-				if (ptst != null) {
-					try {
-						ptst.close();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			return productExists;
-		}
+		
 	}

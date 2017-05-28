@@ -36,9 +36,9 @@ WHERE a.cid = b.cid AND a.pid != b.pid
 AND a.theid < b.theid AND a.total != 0 AND b.total != 0
 AND sales1_total.pid = a.pid AND sales2_total.pid = b.pid;
 
--- Final Result (this query is execute in the DAO object separately)
--- SELECT product_a, product_b, (SUM(toadd)/(prod_a_sales + prod_b_sales)) AS cosine, prod_a_sales, prod_b_sales
--- FROM crossed
--- GROUP BY product_a, product_b, prod_a_sales, prod_b_sales
--- ORDER BY cosine DESC
--- LIMIT 100
+-- Final Result
+SELECT product_a, product_b, (SUM(toadd)/(prod_a_sales + prod_b_sales)) AS cosine, prod_a_sales, prod_b_sales
+FROM crossed
+GROUP BY product_a, product_b, prod_a_sales, prod_b_sales
+ORDER BY cosine DESC
+LIMIT 100

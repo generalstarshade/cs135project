@@ -2,6 +2,7 @@
     <wb-module deploy-name="CSE135Solution">
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/sqlScripts"/>
         <property name="context-root" value="CSE135Solution"/>
         <property name="java-output-path" value="/CSE135Solution/build/classes"/>
     </wb-module>

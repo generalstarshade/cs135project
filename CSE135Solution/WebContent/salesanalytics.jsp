@@ -51,6 +51,7 @@
 							}
 						
 						ArrayList<CategoryModel> categories = (ArrayList<CategoryModel>)categoryDao.getCategories();
+
 						//ArrayList<>
 						%>
 				</td></tr></table></div></br>
@@ -102,7 +103,7 @@
 	<% } } %>
 	<!-- ------------------------------Matrix Code--------------------------------- -->
 	
-	
+	<%ArrayList<AnalyticsModel> analytics = (ArrayList<AnalyticsModel>) session.getAttribute("analytics_matrix"); %>
 	
 	<div>
 		<table>
