@@ -1,0 +1,73 @@
+-----------------Sales Analytics ----------------
+
+Our tables: 
+
+create index product_id on products_in_cart (product_id)
+create index cart_id on products_in_cart (cart_id)
+
+create index person_id on shopping_cart (person_id)
+
+create index category_id on product (category_id)
+
+create index state_id on person (state_id) (maybe)
+create index person_name on peson (person_name ASC nulls last)
+
+create index state_name on state (state_name) (maybe)
+
+
+Select Into tables:
+
+Alphabetical:
+
+Person: 
+create index id on pro (id) 
+
+create index proid on proSales (proid)
+create index pid on proSales (pid)
+
+State: 
+
+create index id on pro (id) 
+
+create index proid on proSales (proid)
+create index pid on proSales (pid)
+
+Top-k: 
+
+Person: 
+
+create index id on pro (id) 
+
+create index proid on proSales (proid)
+create index pid on proSales (pid)
+create index ptotal on proSales (ptotal DESC nulls last)
+
+create index acid on allSales (cid ASC null last)
+
+create index ocid on ordered (cid ASC nulls last)
+create index sumTotal on ordered (sumTotal DESC nulls last)
+
+State:
+
+create index proid on proSales (proid)
+create index pid on proSales (pid)
+create index ptotal on proSales (ptotal DESC nulls last)
+
+create index sstate_id on stateSales (state_id ASC nulls last)
+creat index state_name on stateSales (state_name)
+
+create index astate_id on allSales (state_id ASC nulls last)
+
+create index ostate_id on ordered (state_id)
+create index stotal on ordered (stotal DESC nulls last)
+
+----------------Similar Products ----------------
+
+create index pid on proSales (pid)
+create index proid on proSales (proid)
+
+create index cid on prodVecs (cid)
+create index pid on prodVecs (pid ASC nulls last)
+
+create index product_a on crossed (product_a)
+
