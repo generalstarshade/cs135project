@@ -37,7 +37,7 @@
 						
 						if("owner".equalsIgnoreCase(role)) { %>
 						<% if(request.getAttribute("error") != null && (Boolean)request.getAttribute("error")) { %>
-						<h3 style="color:red;">Data Modification Failure</h3>
+						<h3 style="color:red;">SQL Data Retrieval Failure</h3>
 						<h4 style="color:red;"><%= request.getAttribute("message").toString() %></h4>
 						<% request.setAttribute("message", null);
 							request.setAttribute("error", false);
@@ -51,11 +51,14 @@
 							}
 						
 						ArrayList<CategoryModel> categories = (ArrayList<CategoryModel>)categoryDao.getCategories();
-
-						//ArrayList<>
 						%>
 				</td></tr></table></div></br>
-	</div>
+				</div>
+				<%
+				// code to not show dashboard if user clicked on the next buttons
+				if (request.getAttribute("show_dashboard") == null || request.getAttribute("show_dashboard") == "true") {
+				%>
+
 	<div id="dashboard" class="container" align="center"
 			style="border-style:solid; border-color:#DCDCDC;
 			border-radius:15px; padding-bottom:20px;">
@@ -68,15 +71,39 @@
 		
 			<div class="col-xs-4">
 				<select name="dd_cvs" class="form-control">
-					<option value="0">Customers</option>
+					<%
+					if (session.getAttribute("dd_cvs") == null ||
+					   (Integer) session.getAttribute("dd_cvs") == 0) {
+					%>
+					<option selected value="0">Customers</option>
 					<option value="1">States</option>
+					<%
+					} else {
+					%>
+					<option selected value="1">States</option>
+					<option value="0">Customers</option>
+					<%
+					}
+					%>
 				</select>
 			</div>
 			
 			<div class="col-xs-4">
 				<select name="dd_avt" class="form-control">
-					<option value="0">Alphabetical</option>
+					<%
+					if (session.getAttribute("dd_avt") == null ||
+					   (Integer) session.getAttribute("dd_avt") == 0) {
+					%>
+					<option selected value="0">Alphabetical</option>
 					<option value="1">Top-K</option>
+					<%
+					} else {
+					%>
+					<option selected value="1">Top-K</option>
+					<option value="0">Alphabetical</option>
+					<%
+					}
+					%>
 				</select>
 			</div>	
 					
@@ -85,30 +112,137 @@
 			<option value="-1">All categories</option>
 			<!-- Insert GET categories DAO -->
 			<% for (CategoryModel category : categories) {
+				int cat_id = category.getId();
+				if (session.getAttribute("dd_cat") != null &&
+					(Integer) session.getAttribute("dd_cat") == cat_id) {
+				%>
+					<option selected value=<%=cat_id%>><%=category.getCategoryName()%></option>
+				<%
+				} else {
 			%> <option value=<%=category.getId()%>><%=category.getCategoryName()%></option>
-			<% } %>
+			<% } } %>
 			</select>
 			</div>
 			
 		</div>
 		<div class="row" align="right">
 			</br>
+			<input type="hidden" name="dd_custoffset" value="0"/>
+			<input type="hidden" name="dd_prodoffset" value="0"/>
 			<input type="submit" name="btn_runQuery" 
 			class="btn btn-primary" value="Run Query" style="margin-right:15px;">
 		</div>
 		</form>
 	</div>
+	<% } %>
 	<%} else { %>
 	<h3>This page is available to owners only</h3>
-	<% } } %>
+	<% } %>
 	<!-- ------------------------------Matrix Code--------------------------------- -->
 	
-	<%ArrayList<AnalyticsModel> analytics = (ArrayList<AnalyticsModel>) session.getAttribute("analytics_matrix"); %>
+	<%
+	if (session.getAttribute("dd_prodoffset") == null) {
+		session.setAttribute("dd_prodoffset", 0);
+	}
+	
+	if (session.getAttribute("dd_custoffset") == null) {
+		session.setAttribute("dd_custoffset", 0);
+	}
+
+	ArrayList<AnalyticsModel> analytics = (ArrayList<AnalyticsModel>) request.getAttribute("analytics_matrix"); 
+	if (analytics != null) {
+		// definitely stuff to display
+	%>
 	
 	<div>
 		<table>
+		<tr>
+		<th>Analytics Table</th>
+		<%
+		// create the column headers
+		int i = 0;
+		for (AnalyticsModel analytic : analytics) {
+			if (i == 10) {
+				break;
+			}
+			String product_name = analytic.getProductName();
+		%>
+		<th><b><%=product_name%></b></th>
+		<%
+		i += 1;
+		}
+		%>
+		</tr>
+		<%
+		int j = 0;
+		for (AnalyticsModel analytic: analytics) {
+			if (j == 200) {
+				break;
+			}
+			String name = analytic.getName();
+			double sales = analytic.getSales();
+			if (j % 10 == 0) {
+				%>
+				<tr><th><b><%=name%></b></th>
+				<%
+			}
+			%>
+			<td><%="$" + sales%></td>
+			<%	
+			j += 1;
+		}
+		%>
+		
+
+		</br>
+		
+		
+		<%
+		// TODO: this is still buggy; if everything "lines up" perfectly, and page displays 200 elements, but there are no more, this will fail
+		// check whether or not to display the next buttons
+		if (i == 10) {
+			// display next 10 products button
+		%>
+			<form method="get" action="AnalyticsController">
+			<input type="hidden" name="dd_prodoffset" value="<%=(Integer) session.getAttribute("dd_prodoffset") + 1%>"/>
+			<input type="submit" value="Next 10 Products"/>
+			</form>
+		<%
+		}
+		
+		if (j == i * 20) {
+			// display next 20 customer/state button
+		%>
+			<form method="get" action="AnalyticsController">
+			<%if (session.getAttribute("dd_cvs") == null ||
+				 (Integer) session.getAttribute("dd_cvs") == 0) { 
+			%>
+			<input type="hidden" name="dd_custoffset" value="<%=(Integer) session.getAttribute("dd_custoffset") + 1%>"/>
+			<input type="submit" value="Next 20 Customers"/>
+			</form>
+			<%
+			} else {
+			%>
+			<input type="hidden" name="dd_custoffset" value="<%=(Integer) session.getAttribute("dd_custoffset") + 1%>"/>
+			<input type="submit" value="Next 20 States"/>
+			</form>
+			<%
+			}
+			%>
+			
+		<%
+		}
+		%>
 		
 		</table>
 	</div>
+	
+	<%
+	} 
+	con.close();
+	}
+	%>
+	
+	
 </body>
 </html>

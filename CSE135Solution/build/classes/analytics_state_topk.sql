@@ -26,15 +26,13 @@ INTO TEMP stateSales
 FROM pro pp CROSS JOIN person per
 LEFT OUTER JOIN proSales
 ON (pp.id = proSales.proid AND per.id = proSales.pid), state st 
-WHERE per.role_id = 2 AND per.state_id = st.id
-OFFSET 200 * ? 
-FETCH NEXT 200 ROWS ONLY;
+WHERE per.role_id = 2 AND per.state_id = st.id;
     
 -- Table: allSales
 SELECT state_id, state_name, pid, product_name, SUM(total) AS salesstates, ptotal
 INTO allSales
 FROM statesales
-GROUP BY state_id, state_name, pid, product_name, ptotal
+GROUP BY state_id, state_name, pid, product_name, ptotal;
     
 -- Table: ordered
 SELECT state_id, SUM(salesstates) AS stotal
@@ -43,8 +41,10 @@ FROM allSales
 GROUP BY state_id;
 
 -- Final Result (this query will be made separately in the DAO code)
--- SELECT o.state_id, allSales.state_name, allSales.pid, allSales.product_name, allSales.salesstates, allSales.ptotal, o.sTotal AS stotal
+-- SELECT o.state_id, allSales.state_name AS name, allSales.pid, allSales.product_name, allSales.salesstates AS total, allSales.ptotal, o.sTotal AS stotal
 -- FROM ordered o
 -- LEFT OUTER JOIN allSales
 -- ON (o.state_id = allSales.state_id)
--- ORDER BY stotal DESC, ptotal DESC;
+-- ORDER BY stotal DESC, ptotal DESC
+-- OFFSET 200 * ?
+-- FETCH NEXT 200 ROWS ONLY;

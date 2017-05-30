@@ -37,7 +37,7 @@ FROM allSales
 GROUP BY cid;
 
 -- Final Result (this query will be made separately in the DAO code)
--- SELECT o.cid, allSales.person_name, allSales.pid, allSales.product_name, allSales.total, allSales.ptotal, o.sumTotal AS ctotal
+-- SELECT o.cid, allSales.person_name AS name, allSales.pid, allSales.product_name, allSales.total, allSales.ptotal, o.sumTotal AS ctotal
 -- FROM ordered o
 -- LEFT OUTER JOIN allSales
 -- ON (o.cid = allSales.cid)

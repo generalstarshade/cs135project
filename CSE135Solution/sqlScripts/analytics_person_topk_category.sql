@@ -5,7 +5,7 @@ FROM product prod, products_in_cart pic, shopping_cart s
 WHERE pic.product_id = prod.id
 AND s.is_purchased = true AND pic.cart_id = s.id AND prod.category_id = ?
 GROUP BY prod.id, prod.product_name
-OFFSET 10 * 0
+OFFSET 10 * ?
 FETCH NEXT 10 ROWS ONLY;
 
 -- TABLE: proSales
@@ -27,7 +27,7 @@ FROM pro pp CROSS JOIN person per
 LEFT OUTER JOIN proSales
 ON (pp.id = proSales.proid AND per.id = proSales.pid) 
 WHERE per.role_id = 2
-OFFSET 200 * 0 
+OFFSET 200 * ? 
 FETCH NEXT 200 ROWS ONLY;
     
 -- Table: ordered
@@ -36,9 +36,9 @@ INTO TEMP ordered
 FROM allSales
 GROUP BY cid;
 
--- Final Result
-SELECT o.cid, allSales.person_name, allSales.pid, allSales.product_name, allSales.total, allSales.ptotal, o.sumTotal AS ctotal
-FROM ordered o
-LEFT OUTER JOIN allSales
-ON (o.cid = allSales.cid)
-ORDER BY ctotal DESC, ptotal DESC;
+-- Final Result (this query will be made separately in the DAO code)
+-- SELECT o.cid, allSales.person_name AS name, allSales.pid, allSales.product_name, allSales.total, allSales.ptotal, o.sumTotal AS ctotal
+-- FROM ordered o
+-- LEFT OUTER JOIN allSales
+-- ON (o.cid = allSales.cid)
+-- ORDER BY ctotal DESC, ptotal DESC;

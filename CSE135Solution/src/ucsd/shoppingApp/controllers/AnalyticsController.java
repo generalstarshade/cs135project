@@ -9,6 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import ucsd.shoppingApp.ConnectionManager;
 import ucsd.shoppingApp.AnalyticsDAO;
@@ -41,63 +42,63 @@ public class AnalyticsController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		response.setContentType("text/html");
-		int customer_or_state = Integer.parseInt(request.getParameter("dd_cvs"));
-		int alpha_or_sales = Integer.parseInt(request.getParameter("dd_avt"));
-		int category_id = Integer.parseInt(request.getParameter("dd_cat"));
+		HttpSession session = request.getSession();
+		
+		int customer_or_state;
+		int alpha_or_sales;
+		int category_id;
+		int product_offset;
+		int customer_offset;
+		
+		// skipping this means we came from hitting the next buttons in the analytics page
+		if (request.getParameter("dd_cvs") != null &&
+			request.getParameter("dd_avt") != null &&
+			request.getParameter("dd_cat") != null) {
+			// being in here means we came directly from the dashboard
+			// initialize the session variables
+			customer_or_state = Integer.parseInt(request.getParameter("dd_cvs"));
+			alpha_or_sales = Integer.parseInt(request.getParameter("dd_avt"));
+			category_id = Integer.parseInt(request.getParameter("dd_cat"));
+
+			// save these values in session because dashboard will no longer appear after first query
+			session.setAttribute("dd_cvs",  customer_or_state);
+			session.setAttribute("dd_avt",  alpha_or_sales);
+			session.setAttribute("dd_cat",  category_id);
+		} else {
+			// if we came from hitting the next buttons, HIDE THE DASHBOARD
+			request.setAttribute("show_dashboard", "false");
+		}
+		
+		customer_or_state = (int) session.getAttribute("dd_cvs");
+		alpha_or_sales = (int) session.getAttribute("dd_avt");
+		category_id = (int) session.getAttribute("dd_cat");
+		
+		if (request.getParameter("dd_prodoffset") == null) {
+			product_offset = (int) session.getAttribute("dd_prodoffset");
+		} else {
+			product_offset = Integer.parseInt(request.getParameter("dd_prodoffset"));
+		}
+		
+		if (request.getParameter("dd_custoffset") == null) {
+			customer_offset = (int) session.getAttribute("dd_custoffset");
+		} else {
+			customer_offset = Integer.parseInt(request.getParameter("dd_custoffset"));
+		}
+		
+		session.setAttribute("dd_prodoffset",  product_offset);
+		session.setAttribute("dd_custoffset",  customer_offset);
+		
 		ArrayList<AnalyticsModel> analytics;
 		
-		System.out.println("Customer_or_state: " + customer_or_state);
-		System.out.println("alpha_or_sales: " + alpha_or_sales);
-		System.out.println("category_id: " + category_id);
-		
-		// if we are to display by customer
-		if (customer_or_state == 0) {
-			
-			// if we are to display alphabetically
-			if (alpha_or_sales == 0) {
-				// if we are to display by particular category
-				if (category_id != -1) {
-					// display by category
-				} else {
-					// display all
-				}
-			} else
-				
-			// if we are to display by top k
-			if (alpha_or_sales == 1) {
-				// if we are to display by particular category
-				if (category_id != -1) {
-					// display by category
-				} else {
-					// display all
-				}
-			}
-			
-		} else
-			
-		// if we are to display by state	
-		if (customer_or_state == 1) {
-			
-			// if we are to display alphabetically
-			if (alpha_or_sales == 0) {
-				// if we are to display by particular category
-				if (category_id != -1) {
-					// display by category
-				} else {
-					// display all
-				}
-			} else
-				
-			// if we are to display by top k
-			if (alpha_or_sales == 1) {
-				// if we are to display by particular category
-				if (category_id != -1) {
-					// display by category
-				} else {
-					// display all
-				}
-			}
+		try {
+			analytics = (ArrayList<AnalyticsModel>) analyticsDAO.getAnalytics(customer_or_state, alpha_or_sales, category_id, product_offset, customer_offset);
+			request.setAttribute("analytics_matrix", analytics);
+		} catch (SQLException e) {
+			// error
+			request.setAttribute("error",  true);
+			request.setAttribute("message",  e);
 		}
+		request.getRequestDispatcher("./salesanalytics.jsp").forward(request, response);
 	}
 
 }

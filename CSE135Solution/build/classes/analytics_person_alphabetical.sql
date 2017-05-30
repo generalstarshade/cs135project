@@ -15,10 +15,10 @@ JOIN pro
 ON pic.product_id = pro.id, shopping_cart s, person p
 WHERE pic.cart_id = s.id
 AND s.is_purchased = true AND s.person_id = p.id
-GROUP BY p.id, proid, pro.product_name
+GROUP BY p.id, proid, pro.product_name;
 
 -- Final Result (this query will be made separately in the DAO code)
--- SELECT per.id AS cid, per.person_name, pp.id as pid, pp.product_name, coalesce(proSales.sales, 0) AS total
+-- SELECT per.id AS cid, per.person_name AS name, pp.id as pid, pp.product_name, coalesce(proSales.sales, 0) AS total
 -- FROM pro pp cross join person per
 -- LEFT OUTER JOIN proSales
 -- ON (pp.id = proSales.proid AND per.id = proSales.pid) 
