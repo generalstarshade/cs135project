@@ -198,9 +198,10 @@
 		
 		
 		<%
-		// TODO: this is still buggy; if everything "lines up" perfectly, and page displays 200 elements, but there are no more, this will fail
-		// check whether or not to display the next buttons
-		if (i == 10) {
+		int numProductsLeft = analyticsDao.getNumProductsLeft((Integer) session.getAttribute("dd_prodoffset") + 1);
+		int numCustsLeft = analyticsDao.getNumCustsLeft((Integer) session.getAttribute("dd_custoffset") + 1, (Integer) session.getAttribute("dd_cvs"));
+		
+		if (numProductsLeft > 0) {
 			// display next 10 products button
 		%>
 			<form method="get" action="AnalyticsController">
@@ -210,7 +211,7 @@
 		<%
 		}
 		
-		if (j == i * 20) {
+		if (numCustsLeft > 0) {
 			// display next 20 customer/state button
 		%>
 			<form method="get" action="AnalyticsController">

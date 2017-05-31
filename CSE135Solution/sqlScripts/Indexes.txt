@@ -10,7 +10,7 @@ create index person_id on shopping_cart (person_id)
 create index category_id on product (category_id)
 
 create index state_id on person (state_id) (maybe)
-create index person_name on peson (person_name ASC nulls last)
+create index person_name on person (person_name ASC nulls last)
 
 create index state_name on state (state_name) (maybe)
 

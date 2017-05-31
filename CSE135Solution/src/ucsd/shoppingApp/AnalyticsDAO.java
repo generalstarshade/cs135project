@@ -13,59 +13,60 @@ import ucsd.shoppingApp.models.AnalyticsModel;
 
 public class AnalyticsDAO {
 
-		private static String ANALYTICS_PERSON_ALPHABETICAL_FINAL = 
-				"SELECT per.id AS cid, per.person_name AS name, pp.id as pid, pp.product_name, coalesce(proSales.sales, 0) AS total " +
-				"FROM pro pp cross join person per " +
-				"LEFT OUTER JOIN proSales " +
-				"ON (pp.id = proSales.proid AND per.id = proSales.pid) " +
-				"WHERE per.role_id = 2 " +
-				"ORDER BY per.person_name, pp.product_name " +
-				"OFFSET 200 * ? " +
-				"FETCH NEXT 200 ROWS ONLY";
+		private static String GET_NUM_PRODUCTS_LEFT = "SELECT COUNT(*) AS count FROM product WHERE id > (10 * ?)";
 		
-		private static String ANALYTICS_STATE_ALPHABETICAL_FINAL =
-				"SELECT state_name AS name, product_name, SUM(total) AS total " +
-				"FROM statesales " +
-				"GROUP BY state_name, product_name " +
-				"ORDER BY state_name, product_name " +
-				"OFFSET 200 * ? " +
-				"FETCH NEXT 200 ROWS ONLY";
+		private static String GET_NUM_PERSONS_LEFT = "SELECT COUNT(*) AS count FROM person WHERE id > (20 * ?) AND role_id = 2";
 		
-		private static String ANALYTICS_PERSON_TOPK_FINAL =
-				"SELECT o.cid, allSales.person_name AS name, allSales.pid, allSales.product_name, allSales.total, allSales.ptotal, o.sumTotal AS ctotal " +
-				"FROM ordered o " +
-				"LEFT OUTER JOIN allSales " +
-				"ON (o.cid = allSales.cid) " +
-				"ORDER BY ctotal DESC, ptotal DESC";
-		
-		private static String ANALYTICS_STATE_TOPK_FINAL =
-				"SELECT o.state_id, allSales.state_name AS name, allSales.pid, allSales.product_name, allSales.salesstates AS total, allSales.ptotal, o.sTotal AS stotal " +
-				"FROM ordered o " +
-				"LEFT OUTER JOIN allSales " +
-				"ON (o.state_id = allSales.state_id) " +
-				"ORDER BY stotal DESC, ptotal DESC " +
-				"OFFSET 200 * ? " +
-				"FETCH NEXT 200 ROWS ONLY";
-
-		private static String ANALYTICS_PERSON_ALPHABETICAL_CLEANUP = "DROP TABLE pro; DROP TABLE proSales";
-		
-		private static String ANALYTICS_STATE_ALPHABETICAL_CLEANUP = "DROP TABLE pro; DROP TABLE proSales; DROP TABLE stateSales";
-		
-		private static String ANALYTICS_PERSON_TOPK_CLEANUP = "DROP TABLE pro; DROP TABLE proSales; DROP TABLE allSales; DROP TABLE ordered";
-		
-		private static String ANALYTICS_STATE_TOPK_CLEANUP = "DROP TABLE pro; DROP TABLE proSales; DROP TABLE stateSales; DROP TABLE allSales; DROP TABLE ordered";
+		private static String GET_NUM_STATES_LEFT = "SELECT COUNT(*) AS count FROM state WHERE id > (20 * ?)";
+	
 		private Connection con;
 
 		public AnalyticsDAO(Connection con) {
 			this.con = con;
 		}
 
+		public int getNumProductsLeft(int prod_offset) throws SQLException {
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			
+			pstmt = con.prepareStatement(GET_NUM_PRODUCTS_LEFT);
+			pstmt.setInt(1,  prod_offset);
+			rs = pstmt.executeQuery();
+			rs.next();
+			return rs.getInt("count");
+		}
+		
+		public int getNumCustsLeft(int cust_offset, int cvs) throws SQLException {
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			
+			if (cvs == 0) {
+				// then customer
+				pstmt = con.prepareStatement(GET_NUM_PERSONS_LEFT);
+			} else {
+				pstmt = con.prepareStatement(GET_NUM_STATES_LEFT);
+			}
+			
+			pstmt.setInt(1,  cust_offset);
+			rs = pstmt.executeQuery();
+			rs.next();
+			return rs.getInt("count");
+		}
+		
+		public int getNumStatesLeft(int cust_offset) throws SQLException {
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			
+			pstmt = con.prepareStatement(GET_NUM_PERSONS_LEFT);
+			pstmt.setInt(1,  cust_offset);
+			rs = pstmt.executeQuery();
+			rs.next();
+			return rs.getInt("count");
+		}
+		
 		public List<AnalyticsModel> getAnalytics(int customer_or_state, int alpha_or_sales, int category_id, int product_offset, int customer_offset) throws SQLException {
 			List<AnalyticsModel> analytics = new ArrayList<AnalyticsModel>();
 			PreparedStatement pstmt = null;
-			PreparedStatement finalquery = null;
-			Statement cleanup = con.createStatement();
-
 			ResultSet rs = null;
 			String sql_query = "";
 			
@@ -89,6 +90,7 @@ public class AnalyticsDAO {
 					    pstmt = con.prepareStatement(sql_query);
 					    pstmt.setInt(1,  category_id);
 					    pstmt.setInt(2,  product_offset);
+					    pstmt.setInt(3,  customer_offset);
 					} else {
 						// display all
 						
@@ -100,16 +102,8 @@ public class AnalyticsDAO {
 					    // prepare primary sql query
 					    pstmt = con.prepareStatement(sql_query);
 					    pstmt.setInt(1,  product_offset);
+					    pstmt.setInt(2,  customer_offset);
 					}
-					
-					// prepare final sql query
-				    finalquery = con.prepareStatement(ANALYTICS_PERSON_ALPHABETICAL_FINAL);
-				    finalquery.setInt(1,  customer_offset);
-				    
-				    // execute all queries
-				    pstmt.executeUpdate(); // execute query to generate temp tables
-				    rs = finalquery.executeQuery();
-				    cleanup.executeUpdate(ANALYTICS_PERSON_ALPHABETICAL_CLEANUP); // clean up temp tables
 				} else
 					
 				// if we are to display by top k
@@ -141,14 +135,6 @@ public class AnalyticsDAO {
 					    pstmt.setInt(1,  product_offset);
 					    pstmt.setInt(2,  customer_offset);
 					}
-					
-					// prepare final sql query
-				    finalquery = con.prepareStatement(ANALYTICS_PERSON_TOPK_FINAL);
-				    
-				    // execute all queries
-				    pstmt.executeUpdate(); // execute query to generate temp tables
-				    rs = finalquery.executeQuery();
-				    cleanup.executeUpdate(ANALYTICS_PERSON_TOPK_CLEANUP);
 				}
 				
 			} else
@@ -171,6 +157,7 @@ public class AnalyticsDAO {
 					    pstmt = con.prepareStatement(sql_query);
 					    pstmt.setInt(1,  category_id);
 					    pstmt.setInt(2,  product_offset);
+					    pstmt.setInt(3,  customer_offset);
 					} else {
 						// display all
 						
@@ -182,16 +169,8 @@ public class AnalyticsDAO {
 					    // prepare primary sql query
 					    pstmt = con.prepareStatement(sql_query);
 					    pstmt.setInt(1,  product_offset);
+					    pstmt.setInt(2,  customer_offset);
 					}
-					
-				    // prepare final sql query
-				    finalquery = con.prepareStatement(ANALYTICS_STATE_ALPHABETICAL_FINAL);
-				    finalquery.setInt(1, customer_offset);
-				    
-				    // execute all queries
-				    pstmt.executeUpdate(); // execute query to generate temp tables
-				    rs = finalquery.executeQuery(); // execute query to get results from temp tables
-				    cleanup.executeUpdate(ANALYTICS_STATE_ALPHABETICAL_CLEANUP); // clean up temp tables
 				} else
 					
 				// if we are to display by top k
@@ -209,6 +188,7 @@ public class AnalyticsDAO {
 					    pstmt = con.prepareStatement(sql_query);
 					    pstmt.setInt(1,  category_id);
 					    pstmt.setInt(2,  product_offset);
+					    pstmt.setInt(3,  customer_offset);
 					} else {
 						// display all
 						
@@ -220,18 +200,12 @@ public class AnalyticsDAO {
 					    // prepare primary sql query
 					    pstmt = con.prepareStatement(sql_query);
 					    pstmt.setInt(1,  product_offset);
+					    pstmt.setInt(2,  customer_offset);
 					}
-				    
-				    // prepare final sql query
-				    finalquery = con.prepareStatement(ANALYTICS_STATE_TOPK_FINAL);
-				    finalquery.setInt(1, customer_offset);
-				    
-				    // execute all queries
-				    pstmt.executeUpdate(); // execute query to generate temp tables
-				    rs = finalquery.executeQuery(); // execute query to get results from temp tables
-				    cleanup.executeUpdate(ANALYTICS_STATE_TOPK_CLEANUP); // clean up temp tables
 				}
 			}
+			
+			rs = pstmt.executeQuery();
 			
 			while (rs.next()) {
 				String product_name = rs.getString("product_name");

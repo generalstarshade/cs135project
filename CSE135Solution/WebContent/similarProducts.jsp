@@ -24,9 +24,8 @@
 					<% Connection con = ConnectionManager.getConnection(); 
 						SimilarProductDAO simProductDAO = new SimilarProductDAO(con);
 						String role = session.getAttribute("roleName").toString();
-						
-						if("owner".equalsIgnoreCase(role)) { %>
-						<% if(request.getAttribute("error") != null && (Boolean)request.getAttribute("error")) { %>
+			
+						if(request.getAttribute("error") != null && (Boolean)request.getAttribute("error")) { %>
 						<h3 style="color:red;">Data Modification Failure</h3>
 						<h4 style="color:red;"><%= request.getAttribute("message").toString() %></h4>
 						<% request.setAttribute("message", null);
@@ -58,11 +57,7 @@
 							<% } %>
 				        </tbody>
 				    </table>
-					<% } else { %>
-					<h3>This page is available to owners only</h3>
-					<% } 
-					con.close();
-					%>
+					
 				</td>
 			</tr>
 		</table>
