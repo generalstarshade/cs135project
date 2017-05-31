@@ -41,5 +41,5 @@ FROM ordered o
 LEFT OUTER JOIN allSales
 ON (o.state_id = allSales.state_id)
 ORDER BY stotal DESC, ptotal DESC
-OFFSET 200 * ?
-FETCH NEXT 200 ROWS ONLY
+OFFSET ? * ?
+LIMIT ?

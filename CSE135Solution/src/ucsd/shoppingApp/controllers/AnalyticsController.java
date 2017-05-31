@@ -49,6 +49,7 @@ public class AnalyticsController extends HttpServlet {
 		int category_id;
 		int product_offset;
 		int customer_offset;
+		int total_offset;
 		
 		// skipping this means we came from hitting the next buttons in the analytics page
 		if (request.getParameter("dd_cvs") != null &&
@@ -90,8 +91,25 @@ public class AnalyticsController extends HttpServlet {
 		
 		ArrayList<AnalyticsModel> analytics;
 		
+		if (session.getAttribute("dd_totaloffset") == null) {
+			session.setAttribute("dd_totaloffset",  200);
+		}
+		
+		System.out.println("totaloffset outsideif: " + (Integer) session.getAttribute("dd_totaloffset"));
+
+		if ((Integer) session.getAttribute("dd_totaloffset") == 0) {
+			System.out.println("totaloffset inside if: " + (Integer) session.getAttribute("dd_totaloffset"));
+
+			session.setAttribute("dd_totaloffset",  200);
+			System.out.println("totaloffset WTF AFTER: " + (Integer) session.getAttribute("dd_totaloffset"));
+
+		}
+		
+		System.out.println("totaloffset: " + (Integer) session.getAttribute("dd_totaloffset"));
+		total_offset = (Integer) session.getAttribute("dd_totaloffset");
+		
 		try {
-			analytics = (ArrayList<AnalyticsModel>) analyticsDAO.getAnalytics(customer_or_state, alpha_or_sales, category_id, product_offset, customer_offset);
+			analytics = (ArrayList<AnalyticsModel>) analyticsDAO.getAnalytics(customer_or_state, alpha_or_sales, category_id, product_offset, customer_offset, total_offset);
 			request.setAttribute("analytics_matrix", analytics);
 		} catch (SQLException e) {
 			// error

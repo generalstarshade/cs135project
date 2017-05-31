@@ -29,5 +29,5 @@ SELECT state_name AS name, product_name, SUM(total) AS total
 FROM statesales
 GROUP BY state_name, product_name
 ORDER BY state_name, product_name
-OFFSET 200 * ?
-FETCH NEXT 200 ROWS ONLY
+OFFSET ? * ?
+LIMIT ?

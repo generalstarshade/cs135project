@@ -160,12 +160,22 @@
 		<th>Analytics Table</th>
 		<%
 		// create the column headers
+		List<String> seen_products = new ArrayList<String>();
+		
 		int i = 0;
 		for (AnalyticsModel analytic : analytics) {
 			if (i == 10) {
 				break;
 			}
+			
 			String product_name = analytic.getProductName();
+			System.out.println("productname: " + product_name);
+			if (seen_products.contains(product_name)) {
+				// then break and start displaying at the next row
+				break;
+			}
+			seen_products.add(product_name);
+
 		%>
 		<th><b><%=product_name%></b></th>
 		<%
@@ -176,12 +186,12 @@
 		<%
 		int j = 0;
 		for (AnalyticsModel analytic: analytics) {
-			if (j == 200) {
+			if (j == 200 || j == 20 * i) {
 				break;
 			}
 			String name = analytic.getName();
 			double sales = analytic.getSales();
-			if (j % 10 == 0) {
+			if (j % i == 0) {
 				%>
 				<tr><th><b><%=name%></b></th>
 				<%
@@ -198,14 +208,22 @@
 		
 		
 		<%
-		int numProductsLeft = analyticsDao.getNumProductsLeft((Integer) session.getAttribute("dd_prodoffset") + 1);
-		int numCustsLeft = analyticsDao.getNumCustsLeft((Integer) session.getAttribute("dd_custoffset") + 1, (Integer) session.getAttribute("dd_cvs"));
+		int numProductsLeft = analyticsDao.getNumProductsLeft((Integer) session.getAttribute("dd_prodoffset") + 1, (Integer) session.getAttribute("dd_cat"));
+		int numCustsLeft = analyticsDao.getNumCustsLeft((Integer) session.getAttribute("dd_custoffset") + 1, (Integer) session.getAttribute("dd_cvs"), (Integer) session.getAttribute("dd_cat"));
+		
+		System.out.println("numProductsLeft: " + numProductsLeft);
+		System.out.println("numCustsLeft: " + numCustsLeft);
+		
+		if (i != 0) {
+			session.setAttribute("dd_totaloffset", 20 * i);
+		}
 		
 		if (numProductsLeft > 0) {
 			// display next 10 products button
 		%>
 			<form method="get" action="AnalyticsController">
 			<input type="hidden" name="dd_prodoffset" value="<%=(Integer) session.getAttribute("dd_prodoffset") + 1%>"/>
+			<input type="hidden" name="dd_totaloffset" value="<%=(Integer) session.getAttribute("dd_totaloffset")%>"/>
 			<input type="submit" value="Next 10 Products"/>
 			</form>
 		<%
@@ -219,12 +237,14 @@
 				 (Integer) session.getAttribute("dd_cvs") == 0) { 
 			%>
 			<input type="hidden" name="dd_custoffset" value="<%=(Integer) session.getAttribute("dd_custoffset") + 1%>"/>
+			<input type="hidden" name="dd_totaloffset" value="<%=(Integer) session.getAttribute("dd_totaloffset")%>"/>
 			<input type="submit" value="Next 20 Customers"/>
 			</form>
 			<%
 			} else {
 			%>
 			<input type="hidden" name="dd_custoffset" value="<%=(Integer) session.getAttribute("dd_custoffset") + 1%>"/>
+			<input type="hidden" name="dd_totaloffset" value="<%=(Integer) session.getAttribute("dd_totaloffset")%>"/>
 			<input type="submit" value="Next 20 States"/>
 			</form>
 			<%
