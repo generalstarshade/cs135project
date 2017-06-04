@@ -16,6 +16,7 @@ public class PersonDAO {
 	private static final String INSERT_PERSON_SQL = "INSERT INTO PERSON(person_name, age, role_id, state_id) "
 			+ " VALUES(?, ?, ?, ?) ";
 	private static final String GET_PERSON_ROLE = "SELECT role_name FROM ROLE R, PERSON P WHERE P.person_name = ? AND P.role_id = R.id";
+	private static final String GET_PERSON_STATE = "SELECT p.state_id, s.state_name FROM state s, person p WHERE p.state_id = s.id AND p.person_name = ?";
 	
 	private Connection con = null;
 	
@@ -77,6 +78,37 @@ public class PersonDAO {
 			}
 		}
 		return rows;
+	}
+	
+	public String getPersonState(String username) {
+		String state = null;
+		PreparedStatement ptst = null;
+		ResultSet rs = null;
+		try {
+			ptst = con.prepareStatement(GET_PERSON_STATE);
+			ptst.setString(1, username);
+			rs = ptst.executeQuery();
+			if(rs.next()) {
+				state = rs.getString("state_name");
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				if(rs != null) {
+					rs.close();
+				}
+				if(ptst != null) {
+					ptst.close();
+				}
+			} 
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return state;
 	}
 	
 	public String getPersonRole(String username) {

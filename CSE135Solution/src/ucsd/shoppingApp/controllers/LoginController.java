@@ -49,6 +49,7 @@ public class LoginController extends HttpServlet {
 			PersonDAO personDao = new PersonDAO(con);
 			if(personDao.personExists(uname)) {
 				session.setAttribute("roleName", personDao.getPersonRole(uname));
+				session.setAttribute("stateName", personDao.getPersonState(uname));
 		        //session.setAttribute("validUser", "Yes");
 		        response.sendRedirect("home.jsp");
 			}

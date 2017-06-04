@@ -8,3 +8,8 @@
 /analytics_state_topk.sql
 /analytics_state_topk_category.sql
 /Indexes.txt
+/jsp_get_persons_left.sql
+/jsp_get_states_left.sql
+/jsp_get_products_left.sql
+/SimilarProductsSQLQuery.sql
+/create_precomputed.sql

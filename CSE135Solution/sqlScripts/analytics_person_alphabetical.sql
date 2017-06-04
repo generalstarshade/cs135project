@@ -22,5 +22,5 @@ LEFT OUTER JOIN proSales
 ON (pp.id = proSales.proid AND per.id = proSales.pid) 
 WHERE per.role_id = 2
 ORDER BY per.person_name, pp.product_name
-OFFSET 200 * ? 
-FETCH NEXT 200 ROWS ONLY
+OFFSET ? * ? 
+LIMIT ?

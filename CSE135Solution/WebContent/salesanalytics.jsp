@@ -12,8 +12,10 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Sales Analytics</title>
 <link rel="stylesheet" href="./bootstrap-3.3.7-dist/css/bootstrap.css">
+<script src="salesanalytics.js"></script>
 </head>
 <body>
+
 	</br>
 	
 	<!-- -------------------------------Dashboard Code----------------------------- -->
@@ -43,11 +45,11 @@
 							request.setAttribute("error", false);
 							} 
 						
-						if(request.getAttribute("message")!= null && !(Boolean)request.getAttribute("error")) { %>
+							if(request.getAttribute("message")!= null && !(Boolean)request.getAttribute("error")) { %>
 						<h4 style="color:green;"><%= request.getAttribute("message").toString() %></h4>
 						<% 
-						request.setAttribute("message", null);
-						request.setAttribute("error", false);
+							request.setAttribute("message", null);
+							request.setAttribute("error", false);
 							}
 						
 						ArrayList<CategoryModel> categories = (ArrayList<CategoryModel>)categoryDao.getCategories();
@@ -56,7 +58,7 @@
 				</div>
 				<%
 				// code to not show dashboard if user clicked on the next buttons
-				if (request.getAttribute("show_dashboard") == null || request.getAttribute("show_dashboard") == "true") {
+				
 				%>
 
 	<div id="dashboard" class="container" align="center"
@@ -66,44 +68,19 @@
 		<h3 style="color:#000000;">Dashboard</h3> </br>
 		
 		<form method="get" action="AnalyticsController">
+		<input type="hidden" name="getLog" value="0"/>
 		
 		<div id="dropRows" class="row">	
 		
 			<div class="col-xs-4">
 				<select name="dd_cvs" class="form-control">
-					<%
-					if (session.getAttribute("dd_cvs") == null ||
-					   (Integer) session.getAttribute("dd_cvs") == 0) {
-					%>
-					<option selected value="0">Customers</option>
-					<option value="1">States</option>
-					<%
-					} else {
-					%>
 					<option selected value="1">States</option>
-					<option value="0">Customers</option>
-					<%
-					}
-					%>
 				</select>
 			</div>
 			
 			<div class="col-xs-4">
 				<select name="dd_avt" class="form-control">
-					<%
-					if (session.getAttribute("dd_avt") == null ||
-					   (Integer) session.getAttribute("dd_avt") == 0) {
-					%>
-					<option selected value="0">Alphabetical</option>
-					<option value="1">Top-K</option>
-					<%
-					} else {
-					%>
 					<option selected value="1">Top-K</option>
-					<option value="0">Alphabetical</option>
-					<%
-					}
-					%>
 				</select>
 			</div>	
 					
@@ -127,32 +104,23 @@
 		</div>
 		<div class="row" align="right">
 			</br>
-			<input type="hidden" name="dd_custoffset" value="0"/>
-			<input type="hidden" name="dd_prodoffset" value="0"/>
 			<input type="submit" name="btn_runQuery" 
 			class="btn btn-primary" value="Run Query" style="margin-right:15px;">
 		</div>
 		</form>
 	</div>
-	<% } %>
-	<%} else { %>
+	<% }
+	else { %>
 	<h3>This page is available to owners only</h3>
 	<% } %>
 	<!-- ------------------------------Matrix Code--------------------------------- -->
-	
-	<%
-	if (session.getAttribute("dd_prodoffset") == null) {
-		session.setAttribute("dd_prodoffset", 0);
-	}
-	
-	if (session.getAttribute("dd_custoffset") == null) {
-		session.setAttribute("dd_custoffset", 0);
-	}
 
-	ArrayList<AnalyticsModel> analytics = (ArrayList<AnalyticsModel>) request.getAttribute("analytics_matrix"); 
+	<% ArrayList<AnalyticsModel> analytics = (ArrayList<AnalyticsModel>) request.getAttribute("analytics_matrix"); 
 	if (analytics != null) {
 		// definitely stuff to display
 	%>
+	
+	<button id="btn_refresh" class="btn btn-primary" onclick="refresh()">Refresh</button>
 	
 	<div>
 		<table>
@@ -164,7 +132,7 @@
 		
 		int i = 0;
 		for (AnalyticsModel analytic : analytics) {
-			if (i == 10) {
+			if (i == 50) {
 				break;
 			}
 			
@@ -186,7 +154,7 @@
 		<%
 		int j = 0;
 		for (AnalyticsModel analytic: analytics) {
-			if (j == 200 || j == 20 * i) {
+			if (j == 2500 || j == 50 * i) {
 				break;
 			}
 			String name = analytic.getName();
@@ -206,60 +174,11 @@
 
 		</br>
 		
-		
-		<%
-		int numProductsLeft = analyticsDao.getNumProductsLeft((Integer) session.getAttribute("dd_prodoffset") + 1, (Integer) session.getAttribute("dd_cat"));
-		int numCustsLeft = analyticsDao.getNumCustsLeft((Integer) session.getAttribute("dd_custoffset") + 1, (Integer) session.getAttribute("dd_cvs"), (Integer) session.getAttribute("dd_cat"));
-		
-		System.out.println("numProductsLeft: " + numProductsLeft);
-		System.out.println("numCustsLeft: " + numCustsLeft);
-		
-		if (i != 0) {
-			session.setAttribute("dd_totaloffset", 20 * i);
-		}
-		
-		if (numProductsLeft > 0) {
-			// display next 10 products button
-		%>
-			<form method="get" action="AnalyticsController">
-			<input type="hidden" name="dd_prodoffset" value="<%=(Integer) session.getAttribute("dd_prodoffset") + 1%>"/>
-			<input type="hidden" name="dd_totaloffset" value="<%=(Integer) session.getAttribute("dd_totaloffset")%>"/>
-			<input type="submit" value="Next 10 Products"/>
-			</form>
-		<%
-		}
-		
-		if (numCustsLeft > 0) {
-			// display next 20 customer/state button
-		%>
-			<form method="get" action="AnalyticsController">
-			<%if (session.getAttribute("dd_cvs") == null ||
-				 (Integer) session.getAttribute("dd_cvs") == 0) { 
-			%>
-			<input type="hidden" name="dd_custoffset" value="<%=(Integer) session.getAttribute("dd_custoffset") + 1%>"/>
-			<input type="hidden" name="dd_totaloffset" value="<%=(Integer) session.getAttribute("dd_totaloffset")%>"/>
-			<input type="submit" value="Next 20 Customers"/>
-			</form>
-			<%
-			} else {
-			%>
-			<input type="hidden" name="dd_custoffset" value="<%=(Integer) session.getAttribute("dd_custoffset") + 1%>"/>
-			<input type="hidden" name="dd_totaloffset" value="<%=(Integer) session.getAttribute("dd_totaloffset")%>"/>
-			<input type="submit" value="Next 20 States"/>
-			</form>
-			<%
-			}
-			%>
-			
-		<%
-		}
-		%>
-		
 		</table>
 	</div>
 	
 	<%
-	} 
+	}
 	con.close();
 	}
 	%>
