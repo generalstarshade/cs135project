@@ -73,7 +73,7 @@ public class BuyController extends HttpServlet {
 				String product_name = sale.getProductName();
 				String state_name = (String) session.getAttribute("state_name");
 				double sales = (double) sale.getPrice() * sale.getQuantity();
-				new_sale = new AnalyticsModel(product_name, state_name, sales);
+				new_sale = new AnalyticsModel(product_name, state_name, sales, 0);
 				log.add(new_sale);
 			}
 			

@@ -13,10 +13,19 @@ import ucsd.shoppingApp.models.AnalyticsModel;
 
 public class AnalyticsDAO {
 
+		private static final String UPDATE_PRECOMPUTED = "UPDATE precomputed SET ptotal = ptotal + ? WHERE product_name = ? AND name = ?";
 		private Connection con;
 
 		public AnalyticsDAO(Connection con) {
 			this.con = con;
+		}
+		
+		public void updatePrecomputed(String product_name, String state_name, double added_sales) throws SQLException {
+			PreparedStatement pstmt = con.prepareStatement(UPDATE_PRECOMPUTED);
+			pstmt.setDouble(1,  added_sales);
+			pstmt.setString(2,  product_name);
+			pstmt.setString(3, state_name);
+			pstmt.executeUpdate();
 		}
 		
 		public List<AnalyticsModel> getAnalytics(int category_id, int total_offset) throws SQLException {
@@ -58,8 +67,9 @@ public class AnalyticsDAO {
 				String product_name = rs.getString("product_name");
 				String name = rs.getString("name");
 				double sales = rs.getDouble("total");
+				double product_total_sales = rs.getDouble("ptotal");
 				
-				AnalyticsModel working = new AnalyticsModel(product_name, name, sales);
+				AnalyticsModel working = new AnalyticsModel(product_name, name, sales, product_total_sales);
 				analytics.add(working);
 			}
 			return analytics;

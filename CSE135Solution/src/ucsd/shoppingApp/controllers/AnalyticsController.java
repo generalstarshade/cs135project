@@ -49,29 +49,47 @@ public class AnalyticsController extends HttpServlet {
 			response.setContentType("text/xml");
 			System.out.println("In analytics controller");
 			ServletContext application = getServletContext();
-			ArrayList<AnalyticsModel> log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
+			ArrayList<AnalyticsModel> log;
+			if (application.getAttribute("log_list") == null) {
+				// do stuff that involves telling javascript refresh not to do anything
+			} else {
+				log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
 			
-			System.out.println("log size: " + log.size());
-			
-			PrintWriter writer = response.getWriter();
-			writer.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-			int i = 0;
-			writer.append("<theroot>");
-			writer.append("<length>" + log.size() + "</length>");
-
-			for (AnalyticsModel sale : log) {
-				writer.append("<sale id = '" + i + "'>");
-				writer.append("<product>" + sale.getProductName() + "</product>");
-				writer.append("<state>" + sale.getName() + "</state>");
-				writer.append("<amount>" + sale.getSales() + "</amount>");
-				writer.append("</sale>");
+				System.out.println("log size: " + log.size());
+				
+				PrintWriter writer = response.getWriter();
+				writer.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+				int i = 0;
+				writer.append("<theroot>");
+				writer.append("<length>" + log.size() + "</length>");
+	
+				for (AnalyticsModel sale : log) {
+					writer.append("<sale id = '" + i + "'>");
+					writer.append("<product>" + sale.getProductName() + "</product>");
+					writer.append("<state>" + sale.getName() + "</state>");
+					writer.append("<amount>" + sale.getSales() + "</amount>");
+					writer.append("</sale>");
+					
+					// also take the time to update the precomputed table
+					try {
+						analyticsDAO.updatePrecomputed(sale.getProductName(), sale.getName(), sale.getSales());
+					} catch (SQLException e) {
+						// error
+						request.setAttribute("error",  true);
+						request.setAttribute("message",  e);
+						return;
+					}
+				}
+	
+				// at this point, gather necessary updated data from the precomputed table
+				
+				
+				writer.append("</theroot>");
+				writer.flush();
+				for (AnalyticsModel sale : log) {
+					System.out.println(sale.getProductName());
+				}
 			}
-			writer.append("</theroot>");
-			writer.flush();
-			for (AnalyticsModel sale : log) {
-				System.out.println(sale.getProductName());
-			}
-			
 		} else {
 			response.setContentType("text/html");
 			HttpSession session = request.getSession();

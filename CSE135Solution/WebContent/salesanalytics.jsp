@@ -123,7 +123,7 @@
 	<button id="btn_refresh" class="btn btn-primary" onclick="refresh()">Refresh</button>
 	
 	<div>
-		<table>
+		<table id=analytics_table>
 		<tr>
 		<th>Analytics Table</th>
 		<%
