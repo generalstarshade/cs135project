@@ -14,10 +14,20 @@ import ucsd.shoppingApp.models.AnalyticsModel;
 public class AnalyticsDAO {
 
 		private static final String UPDATE_PRECOMPUTED = "UPDATE precomputed SET ptotal = ptotal + ? WHERE product_name = ? AND name = ?";
+		private static final String GET_TOTAL_SALE_FOR_PRODUCT = "SELECT DISTINCT product_name, ptotal FROM precomputed WHERE product_name = ?";
 		private Connection con;
 
 		public AnalyticsDAO(Connection con) {
 			this.con = con;
+		}
+		
+		public double getTotalSale(String product_name) throws SQLException{
+			ResultSet rs = null;
+			PreparedStatement pstmt = con.prepareStatement(GET_TOTAL_SALE_FOR_PRODUCT);
+			pstmt.setString(1,  product_name);
+			rs = pstmt.executeQuery();
+			rs.next();
+			return rs.getDouble("ptotal");
 		}
 		
 		public void updatePrecomputed(String product_name, String state_name, double added_sales) throws SQLException {

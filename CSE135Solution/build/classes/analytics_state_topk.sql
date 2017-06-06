@@ -1,73 +1,37 @@
--- TABLE: pro
-WITH pro AS (SELECT prod.id, prod.product_name, SUM(pic.quantity * pic.price) AS ptotal
-FROM product prod, products_in_cart pic, shopping_cart s
-WHERE pic.product_id = prod.id
-AND s.is_purchased = true AND pic.cart_id = s.id
-GROUP BY prod.id, prod.product_name
-LIMIT 50),
-
--- Table: proNoLimits
-proNoLimits AS (SELECT prod.id, prod.product_name, SUM(pic.quantity * pic.price) AS ptotal
-FROM product prod, products_in_cart pic, shopping_cart s
-WHERE pic.product_id = prod.id
-AND s.is_purchased = true AND pic.cart_id = s.id
-GROUP BY prod.id, prod.product_name),
-
--- TABLE: proSales
-proSales AS (SELECT p.id AS pid, p.person_name AS person_name, pro.id AS proid, pro.product_name AS product_name, 
-SUM(pic.quantity * pic.price) AS sales, coalesce(pro.ptotal, 0) AS ptotal
-FROM products_in_cart pic
-JOIN pro
-ON pic.product_id = pro.id, shopping_cart s, person p
-WHERE pic.cart_id = s.id
-AND s.is_purchased = true AND s.person_id = p.id
-GROUP BY p.id, proid, pro.product_name, pro.ptotal),
-
--- Table: proSalesNoLimits
-proSalesNoLimits AS (SELECT p.id AS pid, p.person_name AS person_name, pro.id AS proid, pro.product_name AS product_name, 
-SUM(pic.quantity * pic.price) AS sales, coalesce(pro.ptotal, 0) AS ptotal
-FROM products_in_cart pic
-JOIN proNoLimits pro
-ON pic.product_id = pro.id, shopping_cart s, person p
-WHERE pic.cart_id = s.id
-AND s.is_purchased = true AND s.person_id = p.id
-GROUP BY p.id, proid, pro.product_name, pro.ptotal),
-
--- Table: stateSales
-stateSales AS (SELECT per.id AS cid, per.person_name, pp.id as pid, pp.product_name, coalesce(proSales.sales, 0) AS total,
-pp.ptotal, st.state_name AS state_name, st.id AS state_id
-FROM pro pp CROSS JOIN person per
-LEFT OUTER JOIN proSales
-ON (pp.id = proSales.proid AND per.id = proSales.pid), state st 
-WHERE per.role_id = 2 AND per.state_id = st.id),
-    
--- Table: stateSalesNoLimits
-stateSalesNoLimits AS (SELECT per.id AS cid, per.person_name, pp.id as pid, pp.product_name, coalesce(proSales.sales, 0) AS total,
-pp.ptotal, st.state_name AS state_name, st.id AS state_id
-FROM proNoLimits pp CROSS JOIN person per
-LEFT OUTER JOIN proSalesNoLimits proSales
-ON (pp.id = proSales.proid AND per.id = proSales.pid), state st 
-WHERE per.role_id = 2 AND per.state_id = st.id),
-    
--- Table: allSales
-allSales AS (SELECT state_id, state_name, pid, product_name, SUM(total) AS salesstates, ptotal
-FROM statesales
-GROUP BY state_id, state_name, pid, product_name, ptotal),
-    
--- Table: allSalesNoLimits
-allSalesNoLimits AS (SELECT state_id, state_name, pid, product_name, SUM(total) AS salesstates, ptotal
-FROM statesalesNoLimits
-GROUP BY state_id, state_name, pid, product_name, ptotal),
-    
--- Table: ordered
-ordered AS (SELECT state_id, SUM(salesstates) AS stotal
-FROM allSalesNoLimits
-GROUP BY state_id)
-
--- Final Result (this query will be made separately in the DAO code)
-SELECT o.state_id, allSales.state_name AS name, allSales.pid, allSales.product_name, allSales.salesstates AS total, allSales.ptotal, o.sTotal AS stotal
-FROM ordered o
-LEFT OUTER JOIN allSales
-ON (o.state_id = allSales.state_id)
-ORDER BY stotal DESC, ptotal DESC
-LIMIT 2500
+with overall_table as 
+(select pc.product_id,c.state_id,sum(pc.price*pc.quantity) as amount  
+ 	from products_in_cart pc  
+ 	inner join shopping_cart sc on (sc.id = pc.cart_id and sc.is_purchased = true)
+ 	inner join product p on (pc.product_id = p.id) -- add category filter if any
+ 	inner join person c on (sc.person_id = c.id)
+ 	group by pc.product_id,c.state_id
+),
+top_state as
+(select state_id, sum(amount) as dollar from (
+	select state_id, amount from overall_table
+	UNION ALL
+	select id as state_id, 0.0 as amount from state
+	) as state_union
+ group by state_id order by dollar desc limit 50
+),
+top_n_state as 
+(select row_number() over(order by dollar desc) as state_order, state_id, dollar from top_state
+),
+top_prod as 
+(select product_id, sum(amount) as dollar from (
+	select product_id, amount from overall_table
+	UNION ALL
+	select id as product_id, 0.0 as amount from product
+	) as product_union
+group by product_id order by dollar desc limit 50
+),
+top_n_prod as 
+(select row_number() over(order by dollar desc) as product_order, product_id, dollar from top_prod
+)
+select ts.state_id, s.state_name as name, tp.product_id as pid, pr.product_name, COALESCE(ot.amount, 0.0) as total, ts.dollar as stotal, tp.dollar as ptotal
+	from top_n_prod tp CROSS JOIN top_n_state ts 
+	LEFT OUTER JOIN overall_table ot 
+	ON ( tp.product_id = ot.product_id and ts.state_id = ot.state_id)
+	inner join state s ON ts.state_id = s.id
+	inner join product pr ON tp.product_id = pr.id
+	order by ts.state_order, tp.product_order
