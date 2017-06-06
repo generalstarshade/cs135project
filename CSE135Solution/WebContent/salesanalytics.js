@@ -6,6 +6,13 @@ function refresh() {
 	var xmlHttp = new XMLHttpRequest();
 	var url = "AnalyticsController";
 	url = url + "?getLog=1";
+	
+	var top50 = [];
+	var table = document.getElementById("analytics_table");
+	for (var c = 1; r < 50; r++) {
+		url = url + "?" + table.rows[0].cells[c].innerHTML + "=" + table.rows[0].cells[c].getAttribute("data-totalsale");
+	}
+	
 	xmlHttp.onreadystatechange = function() {
 		
 		if (xmlHttp.readyState == 4) {
@@ -27,35 +34,16 @@ function refresh() {
 				alert(state_name);
 				alert(amount);
 				
-				// iterate through the HTML table to redraw and update elements
-				var columns_changed = [];
-				var table = document.getElementById("analytics_table");
-		        for (var r = 0, n = table.rows.length; r < n; r++) {
-		            for (var c = 0, m = table.rows[r].cells.length; c < m; c++) {
-		            	var cell = table.rows[r].cells[c];
-		            	if (r == 0 && table.rows[r].cells[c].innerHTML == product_name) {
-		            		var target_column = c;
-		            	}
-		            	if (c == 0 && table.rows[r].cells[c] == state_name) {
-		            		var target_row = r;
-		            	}
-		            	
-		            	if (target_column == c && target_row == r) {
-		            		// then redraw the updated value in red
-		            		var updated_sales = Number(value.innerHTML) + amount;
-		            		cell.backgroundColor = "red";
-		            		cell.innerHTML = updated_sales;
-		            		columns_changed.push(c);
-		            	}
-		            }
-		        }
-		    
+				var identifier = state_name + "_" + product_name;
+				var cell = document.getElementById(identifier);
+				var updated_sales = Number(cell.innerHTML) + amount;
+				cell.innerHTML = updated_sales;
+				cell.style.color = "red";
 			 }
 		} else {
 			//document.write("not 4");
 		}
 	}
 	xmlHttp.open("GET", url, true);
-	xmlHttp.overrideMimeType("text/xml");
 	xmlHttp.send(null);
 }

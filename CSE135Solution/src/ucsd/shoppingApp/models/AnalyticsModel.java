@@ -13,6 +13,11 @@ public class AnalyticsModel {
 		this.product_total_sales = product_total_sales;
 	}
 	
+	public AnalyticsModel(String product_name, double product_total_sales) {
+		this.product_name = product_name;
+		this.product_total_sales = product_total_sales;
+	}
+	
 	public String getProductName() {
 		return this.product_name;
 	}

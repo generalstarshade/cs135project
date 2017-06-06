@@ -137,7 +137,8 @@
 			}
 			
 			String product_name = analytic.getProductName();
-			System.out.println("productname: " + product_name);
+			double product_total = analytic.getProductTotalSales();
+			String header_id = "header_" + product_name;
 			if (seen_products.contains(product_name)) {
 				// then break and start displaying at the next row
 				break;
@@ -145,7 +146,7 @@
 			seen_products.add(product_name);
 
 		%>
-		<th><b><%=product_name%></b></th>
+		<th id="<%=header_id%>" data-totalsale="<%=product_total%>"><b><%=product_name%></b></th>
 		<%
 		i += 1;
 		}
@@ -157,15 +158,17 @@
 			if (j == 2500 || j == 50 * i) {
 				break;
 			}
+			String product_name = analytic.getProductName();
 			String name = analytic.getName();
 			double sales = analytic.getSales();
+			String id = name + "_" + product_name;
 			if (j % i == 0) {
 				%>
 				<tr><th><b><%=name%></b></th>
 				<%
 			}
 			%>
-			<td><%="$" + sales%></td>
+			<td id="<%=id%>" class="<%=product_name%>"><%=sales%></td>
 			<%	
 			j += 1;
 		}
