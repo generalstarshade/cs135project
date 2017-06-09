@@ -119,7 +119,7 @@
 								String state_name = cartIdToStateId.get(cart_id)[1];
 								int state_id = Integer.parseInt(cartIdToStateId.get(cart_id)[0]);
 								double amount = productPrice * quantity;
-								log.add(new AnalyticsModel(productId, product_name, state_id, state_name, amount));
+								log.add(new AnalyticsModel(productId, product_name, state_id, state_name, amount, 0));
 								added++;
 							}
 							productsCartPtst.executeBatch();

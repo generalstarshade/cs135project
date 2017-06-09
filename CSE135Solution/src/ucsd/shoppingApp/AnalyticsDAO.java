@@ -13,7 +13,7 @@ import ucsd.shoppingApp.models.AnalyticsModel;
 
 public class AnalyticsDAO {
 
-		private static final String UPDATE_PRECOMPUTED = "UPDATE precomputed_base SET amount = amount + ? WHERE product_id = ? AND state_id = ?";
+		private static final String INSERT_PRECOMPUTED = "INSERT INTO precomputed_base (product_id, state_id, amount) VALUES (?, ?, ?)";
 		private static final String GET_TOTAL_SALE_FOR_PRODUCT = "SELECT DISTINCT product_id, amount FROM precomputed_base WHERE product_id = ?";
 		private Connection con;
 
@@ -30,11 +30,21 @@ public class AnalyticsDAO {
 			return rs.getDouble("amount");
 		}
 		
-		public void updatePrecomputed(int product_id, int state_id, double added_sales) throws SQLException {
-			PreparedStatement pstmt = con.prepareStatement(UPDATE_PRECOMPUTED);
-			pstmt.setDouble(1,  added_sales);
-			pstmt.setInt(2,  product_id);
-			pstmt.setInt(3, state_id);
+		public void updatePrecomputed(ArrayList<AnalyticsModel> log) throws SQLException {
+			PreparedStatement pstmt = con.prepareStatement(INSERT_PRECOMPUTED);
+			
+			for (int i = 0; i < log.size(); i++) {
+				pstmt.setInt(1,  log.get(i).getProductId());
+				pstmt.setInt(2, log.get(i).getStateId());
+				pstmt.setDouble(3,  log.get(i).getSales());
+				pstmt.addBatch();
+			}
+
+			pstmt.executeUpdate();
+			
+			pstmt = con.prepareStatement("DROP TABLE precomputed_2");
+			pstmt.executeUpdate();
+			pstmt = con.prepareStatement("SELECT product_id, state_id, SUM(amount) INTO precomputed_2 FROM precomputed_base GROUP BY product_id, state_id");
 			pstmt.executeUpdate();
 		}
 		

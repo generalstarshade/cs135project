@@ -149,16 +149,17 @@ public class AnalyticsController extends HttpServlet {
 					writer.append("<amount>" + amount + "</amount>");
 					writer.append("</sale>");
 					// also take the time to update the precomputed table
-					try {
-						analyticsDAO.updatePrecomputed(product_id, state_id, amount);
-						sale.setProductTotalSales(analyticsDAO.getTotalSale(product_id));
-					} catch (SQLException e) {
-						// error
-						System.out.println("SQL error: " + e.toString());
-						request.setAttribute("error",  true);
-						request.setAttribute("message",  e);
-						return;
-					}
+					
+				}
+				try {
+					analyticsDAO.updatePrecomputed(log);
+					//sale.setProductTotalSales(analyticsDAO.getTotalSale(product_id));
+				} catch (SQLException e) {
+					// error
+					System.out.println("SQL error: " + e.toString());
+					request.setAttribute("error",  true);
+					request.setAttribute("message",  e);
+					return;
 				}
 				
 				// combine current top 50 and log list, and then sort
