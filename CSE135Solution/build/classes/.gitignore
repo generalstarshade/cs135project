@@ -1,15 +1,3 @@
 /ucsd/
-/analytics_person_alphabetical.sql
-/analytics_person_alphabetical_category.sql
-/analytics_person_topk.sql
-/analytics_person_topk_category.sql
-/analytics_state_alphabetical.sql
-/analytics_state_alphabetical_category.sql
-/analytics_state_topk.sql
-/analytics_state_topk_category.sql
-/Indexes.txt
-/jsp_get_persons_left.sql
-/jsp_get_states_left.sql
-/jsp_get_products_left.sql
-/SimilarProductsSQLQuery.sql
-/create_precomputed.sql
+/analytics_state_topk_precomputed.sql
+/analytics_state_topk_precomputed_category.sql

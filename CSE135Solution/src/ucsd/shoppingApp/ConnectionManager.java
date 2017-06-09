@@ -21,7 +21,7 @@ public class ConnectionManager {
             DataSource ds = (DataSource) envContext.lookup(DB_LOOKUP);
             con = ds.getConnection();*/
 			Class.forName("org.postgresql.Driver");
-			con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/CSE135SolutionSmall",
+			con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/CSE135Solution",
 					"postgres", "postgres");
             con.setAutoCommit(false);
 		} catch(Exception e) {

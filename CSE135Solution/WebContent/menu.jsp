@@ -22,7 +22,7 @@
 		<!-- <li><a href='#'>Product Order</a></li> -->
 		<li><a href='./BuyController'>Buy Shopping Cart</a></li>
 		<li><a href='./similarProducts.jsp'/>Similar Products</a></li>
-		<li><a href='./buyOrders.jsp'/>Buy Orders</li>a></li>
+		<li><a href='./buyOrders.jsp'/>Buy Orders</li></a></li>
 		
 	<% }} %>
 </ul>

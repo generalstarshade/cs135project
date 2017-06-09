@@ -120,6 +120,8 @@
 		// definitely stuff to display
 	%>
 	
+	<h4 id="yellow_list"></h4>
+	
 	<button id="btn_refresh" class="btn btn-primary" onclick="refresh()">Refresh</button>
 	
 	<div>
@@ -146,7 +148,7 @@
 			seen_products.add(product_name);
 
 		%>
-		<th id="<%=header_id%>" data-totalsale="<%=product_total%>"><b><%=product_name%></b></th>
+		<th id="<%=header_id%>" data-totalsale="<%=product_total%>" class="<%=product_name%>"><b><%=product_name%></b></th>
 		<%
 		i += 1;
 		}

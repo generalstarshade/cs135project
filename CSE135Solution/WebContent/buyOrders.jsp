@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
 <%@page import="ucsd.shoppingApp.PersonDAO"%>
-<%@ page import="ucsd.shoppingApp.models.*, java.util.*, ucsd.shoppingApp.*, java.sql.*, java.util.Random" %>
+<%@ page import="ucsd.shoppingApp.models.*, java.util.*, ucsd.shoppingApp.*, java.sql.*, java.util.Random, java.util.HashMap" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -28,19 +28,31 @@
 					Connection con = ConnectionManager.getConnection();
 					String INSERT_SHOPPING_CART = "INSERT INTO shopping_cart(person_id, is_purchased, purchase_info) VALUES(?, ?, ?) ";
 					String INSERT_PRODUCTS_IN_CART = "INSERT INTO products_in_cart(cart_id, product_id, price, quantity) VALUES(?, ?, ?, ?)";
-					String GET_RANDOM_PERSON = "SELECT id FROM person OFFSET floor(random()* (select count(*) from person)) LIMIT 1";
-					String GET_RANDOM_5_PRODUCTS = "SELECT id, price FROM product OFFSET floor(random()* (select count(*) from product)) LIMIT 5";
+					String GET_RANDOM_PERSON = "SELECT p.id, p.state_id, s.state_name FROM person p, state s WHERE p.state_id = s.id OFFSET floor(random()* (select count(*) from person)) LIMIT 1";
+					String GET_RANDOM_5_PRODUCTS = "SELECT id, price, product_name FROM product OFFSET floor(random()* (select count(*) from product)) LIMIT 5";
 					Random rand = new Random();
 					int noOfSales = Integer.parseInt(request.getParameter("totalOrder"));
 					int batchSize = 10000;
 					int personId = 0;
+					int stateId = 0;
 					int noOfRows = 0;
 					int productId = 0;
 					int productPrice = 0;
-					int quantity = 0;			
+					int quantity = 0;		
+					String statename = "";
+					
 					PreparedStatement shoppingCartPtst = null, productsCartPtst  = null;
 					Statement personSt = null, productSt = null;
 					ArrayList<Integer> cartIds = new ArrayList<Integer>();
+					ArrayList<Integer> persIds = new ArrayList<Integer>();
+					//ArrayList<AnalyticsModel> log = (ArrayList<AnalyticsModel>)application.getAttribute("log_list");
+					ArrayList<AnalyticsModel> log;
+					if (application.getAttribute("log_list") == null) {
+						log = new ArrayList<AnalyticsModel>();
+					} else {
+						log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
+					}
+					HashMap<Integer, String[]> cartIdToStateId = new HashMap<Integer, String[]>();
 					try {
 						shoppingCartPtst = con.prepareStatement(INSERT_SHOPPING_CART, Statement.RETURN_GENERATED_KEYS);
 						productsCartPtst = con.prepareStatement(INSERT_PRODUCTS_IN_CART);
@@ -51,6 +63,8 @@
 							ResultSet personRs = personSt.executeQuery(GET_RANDOM_PERSON);
 							if(personRs.next()) {
 								personId = personRs.getInt("id");
+								stateId = personRs.getInt("state_id");
+								statename = personRs.getString("state_name");
 							}
 							personRs.close();
 							
@@ -66,6 +80,7 @@
 								ResultSet cartRs = shoppingCartPtst.getGeneratedKeys();
 								while(cartRs.next()) {
 									cartIds.add(cartRs.getInt(1));
+									cartIdToStateId.put(cartRs.getInt(1), new String[] {Integer.toString(stateId), statename});
 								}
 								cartRs.close();
 							}
@@ -75,15 +90,18 @@
 						ResultSet cartRs = shoppingCartPtst.getGeneratedKeys();
 						while(cartRs.next()) {
 							cartIds.add(cartRs.getInt(1));
+							cartIdToStateId.put(cartRs.getInt(1), new String[] {Integer.toString(stateId), statename});
 						}
 						cartRs.close();
 						shoppingCartPtst.close();
 						
 						int totalRows = 0;
+						int added = 0;
 						for(int i=0;i<noOfSales;i++) {
 							ResultSet productRs = productSt.executeQuery(GET_RANDOM_5_PRODUCTS);
 							while(productRs.next()) {
-								productsCartPtst.setInt(1, cartIds.get(i));
+								int cart_id = cartIds.get(i);
+								productsCartPtst.setInt(1, cart_id);
 								productId = productRs.getInt("id");
 								productsCartPtst.setInt(2, productId);
 								productPrice = productRs.getInt("price");
@@ -97,10 +115,18 @@
 								if(totalRows % batchSize == 0) {
 									productsCartPtst.executeBatch();
 								}
+								String product_name = productRs.getString("product_name");
+								String state_name = cartIdToStateId.get(cart_id)[1];
+								int state_id = Integer.parseInt(cartIdToStateId.get(cart_id)[0]);
+								double amount = productPrice * quantity;
+								log.add(new AnalyticsModel(productId, product_name, state_id, state_name, amount));
+								added++;
 							}
 							productsCartPtst.executeBatch();
 						}
+						System.out.println("Added " + added + " to the log table.");
 						con.commit();
+						application.setAttribute("log_list", log); // set the global log table
 						request.setAttribute("message", "Orders inserted successfully");
 						request.setAttribute("error", false);	
 					} catch(Exception e) {
@@ -137,14 +163,14 @@
 			}
 		}
 		%>
-		<% if(request.getAttribute("error") != null && (boolean)request.getAttribute("error")) { %>
+		<% if(request.getAttribute("error") != null && (Boolean)request.getAttribute("error")) { %>
 			<h3 style="color:red;">Data Modification Failure</h3>
 			<h4 style="color:red;"><%= request.getAttribute("message").toString() %></h4>
 			<% request.setAttribute("message", null);
 				request.setAttribute("error", false);
 		} 
 			
-		if(request.getAttribute("message")!= null && !(boolean)request.getAttribute("error")) { %>
+		if(request.getAttribute("message")!= null && !(Boolean)request.getAttribute("error")) { %>
 			<h4 style="color:green;"><%= request.getAttribute("message").toString() %></h4>
 			<% 
 			request.setAttribute("message", null);
