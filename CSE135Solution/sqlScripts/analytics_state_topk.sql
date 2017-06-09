@@ -28,7 +28,7 @@ group by product_id order by dollar desc limit 50
 top_n_prod as 
 (select row_number() over(order by dollar desc) as product_order, product_id, dollar from top_prod
 )
-select ts.state_id, s.state_name as name, tp.product_id as pid, pr.product_name, COALESCE(ot.amount, 0.0) as total, ts.dollar as stotal, tp.dollar as ptotal
+select ts.state_id, s.state_name as name, tp.product_id as product_id, pr.product_name, COALESCE(ot.amount, 0.0) as total, ts.dollar as stotal, tp.dollar as ptotal
 	from top_n_prod tp CROSS JOIN top_n_state ts 
 	LEFT OUTER JOIN overall_table ot 
 	ON ( tp.product_id = ot.product_id and ts.state_id = ot.state_id)

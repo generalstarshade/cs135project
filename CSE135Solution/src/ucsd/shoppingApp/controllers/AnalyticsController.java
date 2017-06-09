@@ -104,16 +104,19 @@ public class AnalyticsController extends HttpServlet {
 			if (application.getAttribute("log_list") == null) {
 				// do stuff that involves telling javascript refresh not to do anything
 			} else {
-				log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
+				//log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
 				// for testing purposes, always initialize the log arraylist
-				/*log = new ArrayList<AnalyticsModel>();
-				log.add(new AnalyticsModel("PROD_45", "Idaho", 10000000, 0));
-				log.add(new AnalyticsModel("PROD_6", "Alabama", 10000000, 0));
-				log.add(new AnalyticsModel("PROD_20", "Oregon", 100, 0));*/
+				/*ArrayList<AnalyticsModel> log = new ArrayList<AnalyticsModel>();
+				log.add(new AnalyticsModel(7, "PROD_6", 54, "American Samoa", 10000000, 0));
+				log.add(new AnalyticsModel(55, "PROD_54", 1, "Alabama", 10000000, 0));
+				log.add(new AnalyticsModel(21, "PROD_20", 37, "Oregon", 100, 0));
+				log.add(new AnalyticsModel(86, "PROD_85", 54, "American Samoa", 50, 0));
+				log.add(new AnalyticsModel(1, "PROD_0", 12, "Idaho", 2000, 0));*/
 				
 
 				Enumeration<String> en = request.getParameterNames();
 				//System.out.println(en.nextElement());
+				en.nextElement(); // skip getLog Parameter
 				for (int i = 0; en.hasMoreElements() && i < 50; i++) {
 				
 					String product_name = en.nextElement();
@@ -136,6 +139,7 @@ public class AnalyticsController extends HttpServlet {
 				writer.append("<theroot>");
 				writer.append("<length>" + log.size() + "</length>");
 	
+				System.out.println("Entering long ass loop");
 				for (AnalyticsModel sale : log) {		
 					
 					product_id = sale.getProductId();
@@ -148,18 +152,22 @@ public class AnalyticsController extends HttpServlet {
 					writer.append("<state>" + state_name + "</state>");
 					writer.append("<amount>" + amount + "</amount>");
 					writer.append("</sale>");
-					// also take the time to update the precomputed table
-					try {
-						analyticsDAO.updatePrecomputed(product_id, state_id, amount);
-						sale.setProductTotalSales(analyticsDAO.getTotalSale(product_id));
-					} catch (SQLException e) {
-						// error
-						System.out.println("SQL error: " + e.toString());
-						request.setAttribute("error",  true);
-						request.setAttribute("message",  e);
-						return;
-					}
 				}
+				
+				// also take the time to update the precomputed table
+				try {
+					//System.out.println("About to update precomputed");
+					analyticsDAO.updatePrecomputed(log);
+					//System.out.println("Getting total sale");
+					//sale.setProductTotalSales(analyticsDAO.getTotalSale(product_id));
+				} catch (SQLException e) {
+					// error
+					System.out.println("SQL error: " + e.toString());
+					request.setAttribute("error",  true);
+					request.setAttribute("message",  e);
+					return;
+				}
+				System.out.println("Finished the long ass loop");
 				
 				// combine current top 50 and log list, and then sort
 				ArrayList<AnalyticsModel> newTop50 = new ArrayList<AnalyticsModel>(oldTop50);
@@ -175,12 +183,10 @@ public class AnalyticsController extends HttpServlet {
 				
 				Collections.sort(newTop50, new AnalyticsModelPriceComparator());
 
-				// TODO: get the elements that was in the top 50 but are not anymore, and send those elements to javascript
+				// get the elements that was in the top 50 but are not anymore, and send those elements to javascript
 				ArrayList<String> purpleList = getExclusionList(oldTop50, newTop50);
 				ArrayList<String> yellowList = getExclusionList(newTop50, oldTop50);
-				
-				//TODO: append the purpleList to writer
-				
+								
 				writer.append("<length>" + purpleList.size() + "</length>");
 				writer.append("<purple>");
 				for (int i = 0; i < purpleList.size(); i++) {
@@ -196,6 +202,23 @@ public class AnalyticsController extends HttpServlet {
 				}
 				writer.append("</yellow>");
 				writer.append("</theroot>");
+				
+				/*if (purpleList.size() > 0 || yellowList.size() > 0) {
+					// then we need to update the precomputed 50 table with the correct rows
+					try {
+						System.out.println("Removing old rows");
+						analyticsDAO.removeOldTop50Rows(purpleList);
+						System.out.println("Adding new rows");
+						analyticsDAO.addNewTop50Rows(yellowList);
+					} catch (SQLException e) {
+						// error
+						System.out.println("SQL error: " + e.toString());
+						request.setAttribute("error",  true);
+						request.setAttribute("message",  e);
+						return;
+					}
+				}*/
+				
 				writer.flush();
 				application.setAttribute("log_list",  null); // after a successful refresh, wipe the log_list
 			} 

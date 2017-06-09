@@ -21,9 +21,12 @@ public class AnalyticsModel {
 		this.product_total_sales = product_total_sales;
 	}
 	
-	public AnalyticsModel(int product_id, String product_name, int state_id, String state_name, double product_total_sales) {
+	public AnalyticsModel(int product_id, String product_name, int state_id, String state_name, double total_sales, double product_total_sales) {
 		this.product_id = product_id;
+		this.product_name = product_name;
 		this.state_id = state_id;
+		this.state_name = state_name;
+		this.total_sales = total_sales;
 		this.product_total_sales = product_total_sales;
 	}
 	
