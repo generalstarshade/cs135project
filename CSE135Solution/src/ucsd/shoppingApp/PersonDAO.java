@@ -111,6 +111,37 @@ public class PersonDAO {
 		return state;
 	}
 	
+	public int getPersonStateId(String username) {
+		int state = 0;
+		PreparedStatement ptst = null;
+		ResultSet rs = null;
+		try {
+			ptst = con.prepareStatement(GET_PERSON_STATE);
+			ptst.setString(1, username);
+			rs = ptst.executeQuery();
+			if(rs.next()) {
+				state = rs.getInt("state_id");
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				if(rs != null) {
+					rs.close();
+				}
+				if(ptst != null) {
+					ptst.close();
+				}
+			} 
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return state;
+	}
+	
 	public String getPersonRole(String username) {
 		String role = null;
 		PreparedStatement ptst = null;

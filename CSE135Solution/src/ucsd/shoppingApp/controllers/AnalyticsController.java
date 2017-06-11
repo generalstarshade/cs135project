@@ -3,11 +3,17 @@ package ucsd.shoppingApp.controllers;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -15,6 +21,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.swing.text.html.HTMLDocument.Iterator;
 
 import ucsd.shoppingApp.ConnectionManager;
 import ucsd.shoppingApp.AnalyticsDAO;
@@ -63,24 +70,30 @@ public class AnalyticsController extends HttpServlet {
 	    }
 	}
 
-	private ArrayList<String> getExclusionList(ArrayList<AnalyticsModel> a1, ArrayList<AnalyticsModel> a2) {
-		ArrayList<String> ret = new ArrayList<String>();
+	private ArrayList<String> getExclusionList(ArrayList<AnalyticsModel> a1, ArrayList<AnalyticsModel> a2, int html_table_size) {
 		
-		for (int y = 0; y < 50; y++) {
+		ArrayList<String> ret = new ArrayList<String>();
+		int zsaved = 0;
+		for (int y = 0; y < html_table_size; y++) {
 			
 			boolean contains = false;
-			for (int z = 0; z < 50; z++) {
+			for (int z = 0; z < html_table_size; z++) {
 				
 				//If oldtop50 item is in newTop50, don't do anything
 				if (a2.get(z).getProductName().equals(a1.get(y).getProductName())) {
 					
 					contains = true;
+					//System.out.println("Found");
+					//System.out.println(a1.get(y).getProductName() + " vs " + a2.get(z).getProductName());
+					zsaved = z;
 					break;
 				}
 			}
 			
 			//if top 50 item is not in newTop50, add to purpleList
 			if (contains == false) {
+				//System.out.println("\n\n\nnot found\n\n\n");
+				//System.out.println(a1.get(y).getProductName() + " vs " + a2.get(zsaved).getProductName());
 				ret.add(a1.get(y).getProductName());
 			}
 		}
@@ -93,101 +106,149 @@ public class AnalyticsController extends HttpServlet {
 	// we can switch based on the incoming parameters to the requests.
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		
+			ServletContext application = getServletContext();
+			HttpSession session = request.getSession();
+
 			if (Integer.parseInt(request.getParameter("getLog")) == 1) {
 			// return log table in xml form
-			response.setContentType("text/xml");
-			System.out.println("In analytics controller");
-			ServletContext application = getServletContext();
-			ArrayList<AnalyticsModel> log = (ArrayList<AnalyticsModel>)application.getAttribute("log_list");
-			ArrayList<AnalyticsModel> oldTop50 = new ArrayList<AnalyticsModel>();
-			if (application.getAttribute("log_list") == null) {
-				// do stuff that involves telling javascript refresh not to do anything
-			} else {
-				log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
-				// for testing purposes, always initialize the log arraylist
-				/*log = new ArrayList<AnalyticsModel>();
-				log.add(new AnalyticsModel("PROD_45", "Idaho", 10000000, 0));
-				log.add(new AnalyticsModel("PROD_6", "Alabama", 10000000, 0));
-				log.add(new AnalyticsModel("PROD_20", "Oregon", 100, 0));*/
-				
 
-				Enumeration<String> en = request.getParameterNames();
-				//System.out.println(en.nextElement());
-				for (int i = 0; en.hasMoreElements() && i < 50; i++) {
-				
-					String product_name = en.nextElement();
-					double the_sales = Double.parseDouble(request.getParameter(product_name));
-					//System.out.println(product_name + " " + the_sales);
-					AnalyticsModel toadd = new AnalyticsModel(product_name, the_sales);
-					oldTop50.add(toadd);
-				}
-				
-				System.out.println("log size: " + log.size());
-
-				int product_id;
-				int state_id;
-				String product_name;
-				String state_name;
-				double amount;
+				response.setContentType("text/xml");
+				System.out.println("In analytics controller");
+				ArrayList<AnalyticsModel> log = (ArrayList<AnalyticsModel>)session.getAttribute("localLogList");
+				ArrayList<AnalyticsModel> oldTop50 = new ArrayList<AnalyticsModel>();
 				PrintWriter writer = response.getWriter();
-				writer.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-
-				writer.append("<theroot>");
-				writer.append("<length>" + log.size() + "</length>");
+				if (application.getAttribute("localLogList") == null) {
+					// do stuff that involves telling javascript refresh not to do anything
+					writer.append("<theroot>");
+					writer.append("<length>0</length>");
+					writer.append("<length>0</length>");
+					writer.append("<length>0</length>");
+					writer.append("</theroot>");
+					writer.flush();
+				} else {
+					//log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
+					
+					// for testing purposes, always initialize the log arraylist
+					//ArrayList<AnalyticsModel> log = new ArrayList<AnalyticsModel>();
+					/*log.add(new AnalyticsModel(126, "PROD_125", 49, "Wisconsin", 100000000, 0));
+					log.add(new AnalyticsModel(53, "PROD_52", 19, "Maine", 100000000, 0));
+					log.add(new AnalyticsModel(40, "PROD_39", 19, "Maine", 50000000, 0));*/
+					
+					// testing purple/yellow functionality
+					log.add(new AnalyticsModel(114, "PROD_113", 49, "Wisconsin", 100000000, 0));
+					//log.add(new AnalyticsModel(139, "PROD_138", 19, "Maine", 100000000, 0));
+					ResultSet rs;
 	
-				for (AnalyticsModel sale : log) {		
+		        	HashMap<String, Double> table_ptotal = new HashMap<String, Double>();
+		        	try {
+		        		analyticsDAO.insertPrecomputed(log);
+		        		rs = analyticsDAO.getProductTotals((int) session.getAttribute("dd_cat"));
+		        		while (rs.next()) {
+		        			table_ptotal.put(rs.getString("product_name"), rs.getDouble("sum"));
+		        		}
+		        	} catch (SQLException e) {
+						System.err.println(e);
+		        	}
+					Enumeration<String> en = request.getParameterNames();
+					en.nextElement();
+					for (int i = 0; en.hasMoreElements() && i < 50; i++) {
 					
-					product_id = sale.getProductId();
-					state_id = sale.getStateId();
-					product_name = sale.getProductName();
-					state_name = sale.getName();
-					amount = sale.getSales();
-					writer.append("<sale>");
-					writer.append("<product>" + product_name + "</product>");
-					writer.append("<state>" + state_name + "</state>");
-					writer.append("<amount>" + amount + "</amount>");
-					writer.append("</sale>");
-					// also take the time to update the precomputed table
-					
-				}
-				try {
-					analyticsDAO.updatePrecomputed(log);
-					//sale.setProductTotalSales(analyticsDAO.getTotalSale(product_id));
-				} catch (SQLException e) {
-					// error
-					System.out.println("SQL error: " + e.toString());
-					request.setAttribute("error",  true);
-					request.setAttribute("message",  e);
-					return;
-				}
-				
-				// combine current top 50 and log list, and then sort
-				ArrayList<AnalyticsModel> newTop50 = new ArrayList<AnalyticsModel>(oldTop50);
-				newTop50.addAll(log);
-				Collections.sort(newTop50, new AnalyticsModelNameComparator()); // do this in order to remove the duplicates
-				
-				// remove duplicates in the newTop50 list
-				for (int i = 0; i < newTop50.size() - 1; i++) {
-					if (newTop50.get(i).getProductName().equals(newTop50.get(i+1).getProductName())) {
-						newTop50.remove(i+1);
+						String product_name = en.nextElement();
+						double the_sales = Double.parseDouble(request.getParameter(product_name));
+						//System.out.println(product_name + " " + the_sales);
+						AnalyticsModel toadd = new AnalyticsModel(product_name, the_sales);
+						oldTop50.add(toadd);
 					}
+					
+					System.out.println("log size: " + log.size());
+	
+					int product_id;
+					int state_id;
+					String product_name;
+					String state_name;
+					double amount;
+					writer.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+	
+					writer.append("<theroot>");
+					if (log.size() == 0) {
+						writer.append("<length>0</length>");
+						writer.append("</theroot>");
+						writer.flush();
+					} else {
+						System.out.println("Entering large for loop");
+						int numSent = 0;
+						for (AnalyticsModel sale : log) {		
+							
+							product_id = sale.getProductId();
+							state_id = sale.getStateId();
+							product_name = sale.getProductName();
+							state_name = sale.getName();
+							amount = sale.getSales();
+							if (oldTop50.contains(sale)) {
+								writer.append("<sale>");
+								writer.append("<product>" + product_name + "</product>");
+								writer.append("<state>" + state_name + "</state>");
+								writer.append("<amount>" + amount + "</amount>");
+								writer.append("</sale>");
+								sale.setProductTotalSales(table_ptotal.get(product_name) + amount);
+								numSent++;
+							}
+						}
+						writer.append("<length>" + numSent + "</length>");
+						System.out.println("Finished large for loop");
+						
+						// combine current top 50 and log list, and then sort
+						/*ArrayList<AnalyticsModel> newTop50 = new ArrayList<AnalyticsModel>(oldTop50);
+						newTop50.addAll(log);
+						
+						Collections.sort(newTop50, new AnalyticsModelNameComparator()); // do this in order to remove the duplicates
+						System.out.println("Finished sorting the new top 50.");
+						
+						for (int i = 0; i < 50; i++) {
+							System.out.println(newTop50.get(i).getProductName());
+						}
+						
+						// remove duplicates in the newTop50 list
+						for (int i = 0; i < newTop50.size() - 1; i++) {
+							if (newTop50.get(i).getProductName().equals(newTop50.get(i+1).getProductName())) {
+								//newTop50.get(i).setSales() = newTop50.get(i+1).getSales();
+								newTop50.remove(i+1);
+								i--;
+							}
+						}
+		
+						
+						
+						Collections.sort(newTop50, new AnalyticsModelPriceComparator());*/
+					}
+				
+				ArrayList<AnalyticsModel> newTop50 = new ArrayList<AnalyticsModel>();
+				for (Map.Entry<String, Double> entry : table_ptotal.entrySet()) {
+					newTop50.add(new AnalyticsModel(entry.getKey(), entry.getValue()));
 				}
 				
 				Collections.sort(newTop50, new AnalyticsModelPriceComparator());
+				/*System.out.println("Printing top 50 lists (old vs new)");
+				for (int i = 0; i < 50; i++) {
+					System.out.println(oldTop50.get(i).getProductName() + " vs " + newTop50.get(i).getProductName());
+				}*/
 
-				// TODO: get the elements that was in the top 50 but are not anymore, and send those elements to javascript
-				ArrayList<String> purpleList = getExclusionList(oldTop50, newTop50);
-				ArrayList<String> yellowList = getExclusionList(newTop50, oldTop50);
 				
-				//TODO: append the purpleList to writer
-				
+				System.out.println("Constructing purple list...");
+				System.out.println("NewTop50Size:" + newTop50.size());
+				ArrayList<String> purpleList = getExclusionList(oldTop50, newTop50, oldTop50.size());
+				System.out.println("Finished constructing purple list. Now constructing yellow list...");
+				ArrayList<String> yellowList = getExclusionList(newTop50, oldTop50, oldTop50.size());
+				System.out.println("Finished constructing yellow list. Now sending purple/yellow list to front end...");
+				System.out.println(yellowList.size());
+
 				writer.append("<length>" + purpleList.size() + "</length>");
 				writer.append("<purple>");
 				for (int i = 0; i < purpleList.size(); i++) {
 					writer.append("<product>" + purpleList.get(i) + "</product>");
 					System.out.println("!!!purple element: " + purpleList.get(i));
 				}
+				
 				writer.append("</purple>");
 				writer.append("<length>" + yellowList.size() + "</length>");
 				writer.append("<yellow>");
@@ -197,14 +258,24 @@ public class AnalyticsController extends HttpServlet {
 				}
 				writer.append("</yellow>");
 				writer.append("</theroot>");
-				writer.flush();
+				writer.flush();	
 				application.setAttribute("log_list",  null); // after a successful refresh, wipe the log_list
-			} 
+				/*new Thread() {
+					public void run() {
+						try {
+							if (log.size() != 0) {
+								analyticsDAO.insertPrecomputed(log); // update precomputed tables
+							}
+						} catch (SQLException e) {
+							System.err.println(e);
+						}
+					}
+				}.start();*/
+			}
 		}				
 
 		else {
 			response.setContentType("text/html");
-			HttpSession session = request.getSession();
 	
 			int category_id;
 			
@@ -224,6 +295,10 @@ public class AnalyticsController extends HttpServlet {
 			ArrayList<AnalyticsModel> analytics;
 			
 			try {
+				if (application.getAttribute("log_list") != null) {
+					analyticsDAO.insertPrecomputed((ArrayList<AnalyticsModel>) application.getAttribute("log_list"));
+				}
+				application.setAttribute("log_list",  null);
 				analytics = (ArrayList<AnalyticsModel>) analyticsDAO.getAnalytics(category_id);
 				request.setAttribute("analytics_matrix", analytics);
 			} catch (SQLException e) {

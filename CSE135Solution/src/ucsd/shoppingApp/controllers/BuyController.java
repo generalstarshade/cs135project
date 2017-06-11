@@ -65,20 +65,35 @@ public class BuyController extends HttpServlet {
 			ArrayList<ShoppingCartModel> sc = (ArrayList<ShoppingCartModel>) shoppingcartDao.getPersonCart(session.getAttribute( "personName" ).toString());
 			request.setAttribute("shoppingCart", sc);
 			int done = shoppingcartDao.buyPersonCart(session.getAttribute( "personName" ).toString());
-			
+			System.out.println("shopping cart size: " + sc.size());
 			AnalyticsModel new_sale;
-			ArrayList<AnalyticsModel> log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
+			ArrayList<AnalyticsModel> log;
+			if (application.getAttribute("log_list") == null) {
+				System.out.println("log list was null");
+				log = new ArrayList<AnalyticsModel>();
+			} else {
+				System.out.println("log list was not null! wtf");
+				log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
+				System.out.println("log size is: " + log.size());
+			}
 
+			System.out.println("right before for loop, shopping cart size is: " + sc.size());
 			for (ShoppingCartModel sale : sc) {
 				String product_name = sale.getProductName();
-				String state_name = (String) session.getAttribute("state_name");
+				int product_id = sale.getProductId();
+				String state_name = (String) session.getAttribute("stateName");
+				int state_id = (int) session.getAttribute("stateId");
 				double sales = (double) sale.getPrice() * sale.getQuantity();
-				new_sale = new AnalyticsModel(product_name, state_name, sales, 0);
+				new_sale = new AnalyticsModel(product_id, product_name, state_id, state_name, sales, 0);
 				log.add(new_sale);
+				System.out.println("Added new product to log: " + product_name);
 			}
+			System.out.println("About to set application log list");
+			application.setAttribute("log_list",  log);
 			
 		} 
 		catch(Exception e) {
+			System.err.println(e);
 			request.setAttribute("message", e);
 			request.setAttribute("error", true);
 		} 

@@ -9,6 +9,20 @@ public class AnalyticsModel {
 	private int product_id;
 	private int state_id;
 	
+	@Override
+	public boolean equals(Object a) {
+		if (this instanceof AnalyticsModel) {
+			AnalyticsModel am = (AnalyticsModel) a;
+			if (this.product_name.equals(am.getProductName())) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
 	public AnalyticsModel(String product_name, String state_name, double total_sales, double product_total_sales) {
 		this.product_name = product_name;
 		this.state_name = state_name;

@@ -91,6 +91,7 @@ public class ShoppingCartController extends HttpServlet {
 			}
 			// add product to cart
 			pc_id = shoppingcartDao.addProductToCart(cart_id,productid,quantity,price);
+			System.out.println("Shopping cart controller: Added product to cart. Productid: " + productid + " cartid: " + cart_id);
 		} catch(Exception e) {
 			request.setAttribute("message", e);
 			request.setAttribute("error", true);

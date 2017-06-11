@@ -1,3 +1,6 @@
 /ucsd/
 /analytics_state_topk_precomputed.sql
 /analytics_state_topk_precomputed_category.sql
+/create_precomputed_base.sql
+/create_precomputed_2.sql
+/create_precomputed_pt.sql

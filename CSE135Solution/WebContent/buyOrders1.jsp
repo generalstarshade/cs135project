@@ -110,7 +110,8 @@
 								productsCartPtst.setInt(2, productId);
 								productPrice = productRs.getInt("price");
 								productsCartPtst.setInt(3, productPrice);
-								quantity = rand.nextInt(10)+1;
+								//quantity = rand.nextInt(10)+1;
+								quantity = 100000;
 								productsCartPtst.setInt(4, quantity);
 								
 								productsCartPtst.addBatch();
@@ -123,7 +124,14 @@
 								String state_name = cartIdToStateId.get(cart_id)[1];
 								int state_id = Integer.parseInt(cartIdToStateId.get(cart_id)[0]);
 								double amount = productPrice * quantity;
-								log.add(new AnalyticsModel(productId, product_name, state_id, state_name, amount, 0));
+								
+								ArrayList<HttpSession> sessionList = (ArrayList<HttpSession>) application.getAttribute("sessionList");
+								ArrayList<AnalyticsModel> log_list;
+								for (HttpSession sess : sessionList) {
+									log_list = (ArrayList<AnalyticsModel>) sess.getAttribute("localLogList");
+									log_list.add(new AnalyticsModel(productId, product_name, state_id, state_name, amount, 0));
+									sess.setAttribute("localLogList", log_list);
+								}
 								added++;
 							}
 							productsCartPtst.executeBatch();
@@ -189,7 +197,7 @@
 					<h3>Hello <%= session.getAttribute("personName") %></h3>
 				<h3>Buy N Orders</h3>
 				<p> Provide number of orders to be inserted. It will insert 'N' carts and '5' products for each cart, of random quantity between 1 and 10. Customers and Products are picked up randomly from the table </p> 
-				<form method="GET" action="buyOrders.jsp" id="buyOrders">
+				<form method="GET" action="buyOrders1.jsp" id="buyOrders">
 					Enter number of Orders : <input type="text" name="totalOrder" required=true/>
 					<input type="submit" value="Buy" class="submitBtn"/>
 				</form>

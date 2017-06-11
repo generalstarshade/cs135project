@@ -2,11 +2,19 @@ package ucsd.shoppingApp.models;
 
 public class ShoppingCartModel {
 	private int id;
+	private int productId;
 	private String productName;
 	private float price;
 	private int quantity;
 	public ShoppingCartModel() {
 		
+	}
+	
+	public int getProductId() {
+		return this.productId;
+	}
+	public void setProductId(int productId) {
+		this.productId = productId;
 	}
 	public String getProductName() {
 		return this.productName;

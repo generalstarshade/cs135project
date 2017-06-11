@@ -1,0 +1,1 @@
+SELECT product_id, product_name, state_id, sum(amount) AS amount INTO precomputed_2 FROM precomputed_base GROUP BY product_id, product_name, state_id

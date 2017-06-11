@@ -1,0 +1,1 @@
+SELECT product_id, product_name, sum(amount) INTO precomputed_pt FROM precomputed_2 GROUP BY product_id, product_name

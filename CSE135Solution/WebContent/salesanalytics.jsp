@@ -1,4 +1,6 @@
 <%@page import="java.sql.Connection"%>
+<%@page import="java.text.DecimalFormat"%>
+
 <%@page import="ucsd.shoppingApp.ConnectionManager"%>
 <%@page import="ucsd.shoppingApp.CategoryDAO"%>
 <%@page import="ucsd.shoppingApp.AnalyticsDAO"%>
@@ -122,9 +124,10 @@
 	
 	<h4 id="yellow_list"></h4>
 	
-	<button id="btn_refresh" class="btn btn-primary" onclick="refresh()">Refresh</button>
-	
 	<div>
+		<button id="btn_refresh" class="btn btn-primary" onclick="refresh()">Refresh</button>
+		<button id="btn_refresh" class="btn btn-primary" onclick="refresh()" style="float: right;">Refresh</button>
+		
 		<table id=analytics_table>
 		<tr>
 		<th>Analytics Table</th>
@@ -156,6 +159,8 @@
 		</tr>
 		<%
 		int j = 0;
+		DecimalFormat df = new DecimalFormat("#");
+		df.setMaximumFractionDigits(2);
 		for (AnalyticsModel analytic: analytics) {
 			if (j == 2500 || j == 50 * i) {
 				break;
@@ -170,7 +175,7 @@
 				<%
 			}
 			%>
-			<td id="<%=id%>" class="<%=product_name%>"><%=sales%></td>
+			<td id="<%=id%>" class="<%=product_name%>"><%=df.format(sales)%></td>
 			<%	
 			j += 1;
 		}
@@ -180,8 +185,10 @@
 		</br>
 		
 		</table>
+		<button id="btn_refresh" class="btn btn-primary" onclick="refresh()">Refresh</button>
+		<button id="btn_refresh" class="btn btn-primary" onclick="refresh()" style="float: right;">Refresh</button>
 	</div>
-	
+
 	<%
 	}
 	con.close();

@@ -13,7 +13,7 @@ import ucsd.shoppingApp.models.ProductModel;
 import ucsd.shoppingApp.models.ShoppingCartModel;
 
 public class ShoppingCartDAO {
-	private static final String GET_PERSON_CART = "SELECT P.*, C.quantity, G.category_name FROM SHOPPING_CART S,"
+	private static final String GET_PERSON_CART = "SELECT P.id AS product_id, P.*, C.quantity, G.category_name FROM SHOPPING_CART S,"
 			+ "PRODUCTS_IN_CART C, PRODUCT P, PERSON U, CATEGORY G where U.person_name = ? and S.person_id = U.id and S.id = C.cart_id and C.product_id = P.id and S.is_purchased=false and G.id = p.category_id";
 	private static final String CREATE_CART_SQL = "INSERT INTO SHOPPING_CART(person_id, is_purchased) "
 			+ " VALUES(?, false) ";
@@ -38,6 +38,7 @@ public class ShoppingCartDAO {
 			rs = ptst.executeQuery();
 			while(rs.next()) {
 				ShoppingCartModel sc = new ShoppingCartModel();
+				sc.setProductId(rs.getInt("product_id"));
 				sc.setProductName(rs.getString("product_name"));
 				sc.setPrice(rs.getFloat("price"));
 				sc.setQuantity(rs.getInt("quantity"));
