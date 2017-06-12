@@ -117,7 +117,7 @@ public class AnalyticsController extends HttpServlet {
 				ArrayList<AnalyticsModel> log = (ArrayList<AnalyticsModel>)session.getAttribute("localLogList");
 				ArrayList<AnalyticsModel> oldTop50 = new ArrayList<AnalyticsModel>();
 				PrintWriter writer = response.getWriter();
-				if (application.getAttribute("localLogList") == null) {
+				if (((ArrayList<AnalyticsModel>)session.getAttribute("localLogList")).size() == 0) {
 					// do stuff that involves telling javascript refresh not to do anything
 					writer.append("<theroot>");
 					writer.append("<length>0</length>");
@@ -259,7 +259,8 @@ public class AnalyticsController extends HttpServlet {
 				writer.append("</yellow>");
 				writer.append("</theroot>");
 				writer.flush();	
-				application.setAttribute("log_list",  null); // after a successful refresh, wipe the log_list
+				ArrayList<AnalyticsModel> log_list_new = new ArrayList<AnalyticsModel>();
+				session.setAttribute("localLogList",  log_list_new); // after a successful refresh, wipe the log_list
 				/*new Thread() {
 					public void run() {
 						try {
@@ -295,10 +296,11 @@ public class AnalyticsController extends HttpServlet {
 			ArrayList<AnalyticsModel> analytics;
 			
 			try {
-				if (application.getAttribute("log_list") != null) {
-					analyticsDAO.insertPrecomputed((ArrayList<AnalyticsModel>) application.getAttribute("log_list"));
+				if (session.getAttribute("localLogList") != null) {
+					analyticsDAO.insertPrecomputed((ArrayList<AnalyticsModel>) session.getAttribute("localLogList"));
 				}
-				application.setAttribute("log_list",  null);
+				ArrayList<AnalyticsModel> new_log_list = new ArrayList<AnalyticsModel>();
+				session.setAttribute("localLogList",  new_log_list);
 				analytics = (ArrayList<AnalyticsModel>) analyticsDAO.getAnalytics(category_id);
 				request.setAttribute("analytics_matrix", analytics);
 			} catch (SQLException e) {

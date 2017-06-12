@@ -68,12 +68,12 @@ public class BuyController extends HttpServlet {
 			System.out.println("shopping cart size: " + sc.size());
 			AnalyticsModel new_sale;
 			ArrayList<AnalyticsModel> log;
-			if (application.getAttribute("log_list") == null) {
+			if (session.getAttribute("localLogList") == null) {
 				System.out.println("log list was null");
 				log = new ArrayList<AnalyticsModel>();
 			} else {
 				System.out.println("log list was not null! wtf");
-				log = (ArrayList<AnalyticsModel>) application.getAttribute("log_list");
+				log = (ArrayList<AnalyticsModel>) session.getAttribute("localLogList");
 				System.out.println("log size is: " + log.size());
 			}
 
@@ -89,7 +89,7 @@ public class BuyController extends HttpServlet {
 				System.out.println("Added new product to log: " + product_name);
 			}
 			System.out.println("About to set application log list");
-			application.setAttribute("log_list",  log);
+			session.setAttribute("localLogList",  log);
 			
 		} 
 		catch(Exception e) {

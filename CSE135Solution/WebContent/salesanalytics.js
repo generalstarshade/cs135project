@@ -22,34 +22,30 @@ function refresh() {
 			//document.write("hi2");
 			 var xmlDoc = xmlHttp.responseXML;
 			 var log_length = xmlDoc.getElementsByTagName("length")[0].childNodes[0].nodeValue;
+			 // redraw everything to be normal
+			 var table = document.getElementById("analytics_table");
+			 for (var i = 0, row; row = table.rows[i]; i++) {
+				 for (var j = 0, col; col = row.cells[j]; j++) {
+					 row.cells[j].style.color = "black";
+				 }
+			 }
+			 var sales = xmlDoc.getElementsByTagName("sale");
+	
+			 for (var i = 0; i < log_length; i++) {
+				var sale = sales[i];
 			 
-			 if (log_length == 0) {
-				 // redraw everything to be normal
-				 var table = document.getElementById("analytics_table");
-				 for (var i = 0, row; row = table.rows[i]; i++) {
-					 for (var j = 0, col; col = row.cells[j]; j++) {
-						 row.cells[j].style.color = "black";
-					 }
-				 }
-			 } else {
-				 var sales = xmlDoc.getElementsByTagName("sale");
-		
-				 for (var i = 0; i < log_length; i++) {
-					var sale = sales[i];
-				 
-					// extract the elements of the new sale
-					var product_name = sale.getElementsByTagName("product")[0].childNodes[0].nodeValue;
-					var state_name = sale.getElementsByTagName("state")[0].childNodes[0].nodeValue;
-					var amount = sale.getElementsByTagName("amount")[0].childNodes[0].nodeValue;
-					
-					var identifier = state_name + "_" + product_name;
-					var cell = document.getElementById(identifier);
-					if (cell != null) {
-						var updated_sales = Number(cell.innerText) + Number(amount);
-						cell.innerHTML = updated_sales;
-						cell.style.color = "red";
-					}
-				 }
+				// extract the elements of the new sale
+				var product_name = sale.getElementsByTagName("product")[0].childNodes[0].nodeValue;
+				var state_name = sale.getElementsByTagName("state")[0].childNodes[0].nodeValue;
+				var amount = sale.getElementsByTagName("amount")[0].childNodes[0].nodeValue;
+				
+				var identifier = state_name + "_" + product_name;
+				var cell = document.getElementById(identifier);
+				if (cell != null) {
+					var updated_sales = Number(cell.innerText) + Number(amount);
+					cell.innerHTML = updated_sales;
+					cell.style.color = "red";
+				}
 			 }
 			 var purple_length = xmlDoc.getElementsByTagName("length")[1].childNodes[0].nodeValue;
 			 var yellow_length = xmlDoc.getElementsByTagName("length")[2].childNodes[0].nodeValue;
